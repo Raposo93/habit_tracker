@@ -205,3 +205,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+credentials.json
+token.json
+token.pkl
+.vscode/settings.json
+.vscode/PythonImportHelper-v2-Completion.json
+habit_tracker.db
