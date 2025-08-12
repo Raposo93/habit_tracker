@@ -4,7 +4,7 @@ from pathlib import Path
 import csv
 from logger import logger
 
-DB_PATH = Path("habit_tracker.db")
+DB_PATH = Path("./db/habit_tracker.db")
 
 def create_table():
     with sqlite3.connect(DB_PATH) as conn:
