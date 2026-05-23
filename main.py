@@ -1,8 +1,7 @@
-from pathlib import Path
 import db
 from auth import get_sheets_service
 from reader import SheetReader
-from parser import WeeklyDataExporter
+from weekly_exporter import WeeklyDataExporter
 from config import Config
 from logger import logger
 
