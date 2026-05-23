@@ -1,4 +1,5 @@
 import csv
+from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
 
@@ -24,7 +25,7 @@ class WeeklyDataExporter:
     def _build_matrix(self) -> Dict[tuple, Dict]:
         return {(cell['row'], cell['col']): cell for cell in self.weekly_data}
 
-    def export_to_csv(self, csv_path: str):
+    def export_to_csv(self, csv_path: Path) -> None:
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(["date", "habit", "score", "note"])

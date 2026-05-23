@@ -3,7 +3,6 @@ from pathlib import Path
 import csv
 from logger import logger
 
-# db_path = Path("./db/habit_tracker.db")
 
 def _create_tables(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)

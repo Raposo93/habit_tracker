@@ -22,7 +22,7 @@ def main():
     exporter.export_to_csv(config.CSV_OUTPUT)
     logger.info(f"Exported CSV to {config.CSV_OUTPUT}")
 
-    db.import_csv_to_database(config.CSV_OUTPUT)
+    db.import_csv_to_database(config.CSV_OUTPUT, config.DB_PATH)
     logger.info("Data imported successfully into SQLite")
 
 

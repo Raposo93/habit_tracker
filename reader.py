@@ -33,13 +33,13 @@ class SheetReader:
 
     def read_weekly_data(self) -> List[Dict]:
         logger.info("Reading weekly data from sheet")
-        habitos = self.read_habit_names()
-        if not habitos:
+        habits = self.read_habit_names()
+        if not habits:
             logger.warning("No habits found")
             return []
 
-        num_habitos = len(habitos)
-        end_column_letter = chr(ord('C') + num_habitos - 1)
+        num_habits = len(habits)
+        end_column_letter = chr(ord('C') + num_habits - 1)
         range_to_read = f"C2:{end_column_letter}8"
         logger.info(f"Calculated range to read: {range_to_read}")
 
