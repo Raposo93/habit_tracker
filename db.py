@@ -1,58 +1,58 @@
-# db.py
 import sqlite3
 from pathlib import Path
 import csv
 from logger import logger
 
-DB_PATH = Path("./db/habit_tracker.db")
+# db_path = Path("./db/habit_tracker.db")
 
-def create_table():
-    with sqlite3.connect(DB_PATH) as conn:
+def _create_tables(db_path: Path) -> None:
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(db_path) as conn:
         c = conn.cursor()
         c.execute('''
-            CREATE TABLE IF NOT EXISTS habitos (
-                fecha TEXT NOT NULL,
-                habito TEXT NOT NULL,
-                valor REAL,
-                nota TEXT,
-                PRIMARY KEY (fecha, habito)
+            CREATE TABLE IF NOT EXISTS habit_entries (
+                date TEXT NOT NULL,
+                habit TEXT NOT NULL,
+                score REAL,
+                note TEXT,
+                PRIMARY KEY (date, habit)
             )
         ''')
         conn.commit()
-        logger.info("Table 'habitos' created or already exists")
+        logger.info("Table 'habit_entries' created or already exists")
 
-def import_csv_to_db(csv_path: str):
-    create_table()
-    with sqlite3.connect(DB_PATH) as conn:
+def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
+    _create_tables(db_path)
+    with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
 
         with open(csv_path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                fecha = row['fecha']
-                habito = row['habito']
-                valor = float(row['valor'].replace(",", ".")) if row['valor'] else None
-                nota = row['nota']
+                date = row['date']
+                habit = row['habit']
+                score = float(row['score'].replace(",", ".")) if row['score'] else None
+                note = row['note']
 
                 cursor.execute(
-                    "SELECT 1 FROM habitos WHERE fecha = ? AND habito = ?",
-                    (fecha, habito)
+                    "SELECT 1 FROM habit_entries WHERE date = ? AND habit = ?",
+                    (date, habit)
                 )
                 if cursor.fetchone():
-                    logger.info(f"Skipped duplicate: {fecha} - {habito}")
+                    logger.info(f"Skipped duplicate: {date} - {habit}")
                     continue
 
-                cursor.execute("SELECT MAX(fecha) FROM habitos")
-                max_fecha = cursor.fetchone()[0]
-                if max_fecha and fecha < max_fecha:
-                    logger.info(f"Skipped older entry: {fecha} < {max_fecha} ({habito})")
+                cursor.execute("SELECT MAX(date) FROM habit_entries")
+                max_date = cursor.fetchone()[0]
+                if max_date and date < max_date:
+                    logger.info(f"Skipped older entry: {date} < {max_date} ({habit})")
                     continue
 
                 cursor.execute(
-                    "INSERT INTO habitos (fecha, habito, valor, nota) VALUES (?, ?, ?, ?)",
-                    (fecha, habito, valor, nota)
+                    "INSERT INTO habit_entries (date, habit, score, note) VALUES (?, ?, ?, ?)",
+                    (date, habit, score, note)
                 )
-                logger.info(f"Inserted: {fecha} - {habito} - {valor} - {nota}")
+                logger.info(f"Inserted: {date} - {habit} - {score} - {note}")
 
         conn.commit()
         logger.info("CSV import completed and committed")

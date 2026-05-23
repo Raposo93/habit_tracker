@@ -27,15 +27,15 @@ class WeeklyDataExporter:
     def export_to_csv(self, csv_path: str):
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow(["fecha", "habito", "valor", "nota"])
+            writer.writerow(["date", "habit", "score", "note"])
 
-            for row_idx, fecha in enumerate(self.week_dates):
-                fecha_iso = self._format_date(fecha)
+            for row_idx, date in enumerate(self.week_dates):
+                date_iso = self._format_date(date)
 
-                for col_idx, habito in enumerate(self.habit_names):
+                for col_idx, habit in enumerate(self.habit_names):
                     cell = self.matrix.get((row_idx, col_idx), {'value': '', 'note': ''})
-                    valor = self._sanitize(str(cell.get('value', '')))
-                    nota = self._sanitize(str(cell.get('note', '')))
+                    score = self._sanitize(str(cell.get('value', '')))
+                    note = self._sanitize(str(cell.get('note', '')))
 
-                    if valor and valor.lower() != 'none':
-                        writer.writerow([fecha_iso, habito, valor, nota])
+                    if score and score.lower() != 'none':
+                        writer.writerow([date_iso, habit, score, note])
