@@ -1,5 +1,5 @@
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 import os
 from typing import Optional
 
@@ -13,5 +13,5 @@ class Config:
         self.CSV_OUTPUT = os.getenv("CSV_OUTPUT", "habitos_export.csv")
         self.SPREADSHEET_ID: str = os.getenv("SPREADSHEET_ID") or ""
         if not self.SPREADSHEET_ID:
-            raise ValueError("SPREADSHEET_ID no está configurado en .env")
+            raise ValueError("SPREADSHEET_ID it is not configured on .env")
 

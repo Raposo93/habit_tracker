@@ -37,6 +37,5 @@ class WeeklyDataExporter:
                     valor = self._sanitize(str(cell.get('value', '')))
                     nota = self._sanitize(str(cell.get('note', '')))
 
-                    # Solo exportar si valor no está vacío ni es 'None'
                     if valor and valor.lower() != 'none':
                         writer.writerow([fecha_iso, habito, valor, nota])
