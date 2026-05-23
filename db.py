@@ -20,6 +20,14 @@ def _create_tables(db_path: Path) -> None:
         conn.commit()
         logger.info("Table 'habit_entries' created or already exists")
 
+def _parse_score(value: str) -> float | None:
+    value = value.strip()
+    
+    if not value:
+        return None
+
+    return float(value.replace(",", "."))
+
 def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
     _create_tables(db_path)
     with sqlite3.connect(db_path) as conn:
@@ -28,10 +36,10 @@ def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
         with open(csv_path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                date = row['date']
-                habit = row['habit']
-                score = float(row['score'].replace(",", ".")) if row['score'] else None
-                note = row['note']
+                date = row["date"]
+                habit = row["habit"]
+                score = _parse_score(row["score"])
+                note = row["note"]
 
                 cursor.execute(
                     "SELECT 1 FROM habit_entries WHERE date = ? AND habit = ?",
