@@ -82,3 +82,19 @@ def _read_expected_rows_from_csv(csv_path):
         ]
 
     return sorted(rows, key=lambda row: (row[0], row[1]))
+
+def test_import_csv_to_database_is_idempotent(tmp_path):
+    csv_path = Path("tests/resources/habits_export.csv")
+    db_path = tmp_path / "habit_tracker.db"
+
+    import_csv_to_database(csv_path, db_path)
+    import_csv_to_database(csv_path, db_path)
+
+    with sqlite3.connect(db_path) as conn:
+        row_count = conn.execute(
+            "SELECT COUNT(*) FROM habit_entries"
+        ).fetchone()[0]
+
+    expected_rows = _read_expected_rows_from_csv(csv_path)
+
+    assert row_count == len(expected_rows)
