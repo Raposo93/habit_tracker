@@ -22,11 +22,18 @@ def _create_tables(db_path: Path) -> None:
 
 def _parse_score(value: str) -> float | None:
     value = value.strip()
-    
+
     if not value:
         return None
 
     return float(value.replace(",", "."))
+
+def _entry_exists(cursor: sqlite3.Cursor, date: str, habit: str) -> bool:
+    cursor.execute(
+        "SELECT 1 FROM habit_entries WHERE date = ? AND habit = ?",
+        (date, habit)
+    )
+    return cursor.fetchone() is not None
 
 def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
     _create_tables(db_path)
@@ -41,14 +48,10 @@ def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
                 score = _parse_score(row["score"])
                 note = row["note"]
 
-                cursor.execute(
-                    "SELECT 1 FROM habit_entries WHERE date = ? AND habit = ?",
-                    (date, habit)
-                )
-                if cursor.fetchone():
+                if _entry_exists(cursor, date, habit):
                     logger.info(f"Skipped duplicate: {date} - {habit}")
                     continue
-
+                
                 cursor.execute("SELECT MAX(date) FROM habit_entries")
                 max_date = cursor.fetchone()[0]
                 if max_date and date < max_date:
