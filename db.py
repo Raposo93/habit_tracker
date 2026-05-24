@@ -1,14 +1,15 @@
+import csv
 import sqlite3
 from pathlib import Path
-import csv
+
 from logger import logger
 
 
 def _create_tables(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
-        c = conn.cursor()
-        c.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS habit_entries (
                 date TEXT NOT NULL,
                 habit TEXT NOT NULL,
@@ -63,9 +64,11 @@ def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
                 latest_entry_date = _get_latest_entry_date(cursor)
 
                 if latest_entry_date is not None and date < latest_entry_date:
-                    logger.info(f"Skipped older entry: {date} < {latest_entry_date} ({habit})")
+                    logger.info(
+                        f"Skipped older entry: {date} < {latest_entry_date} ({habit})"
+                        )
                     continue
-                
+
                 cursor.execute(
                     "INSERT INTO habit_entries (date, habit, score, note) VALUES (?, ?, ?, ?)",
                     (date, habit, score, note),
