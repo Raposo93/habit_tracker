@@ -211,3 +211,17 @@ token.pkl
 .vscode/settings.json
 .vscode/PythonImportHelper-v2-Completion.json
 habit_tracker.db
+
+# Habit tracker local state
+db/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+
+# Google/local credentials
+credentials.json
+token.json
+token.pkl
+.env

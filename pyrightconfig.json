@@ -5,5 +5,12 @@
     "**/__pycache__",
     "**/.venv",
     "**/venv"
+  ],
+  "include": [
+    "src",
+    "tests"
+  ],
+  "extraPaths": [
+    "src"
   ]
 }

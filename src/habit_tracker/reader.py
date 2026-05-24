@@ -3,7 +3,7 @@ from datetime import date, datetime
 from typing import List, Dict, Any
 import logging
 
-from models import HabitEntry
+from habit_tracker.models import HabitEntry
 
 logger = logging.getLogger(__name__)
 

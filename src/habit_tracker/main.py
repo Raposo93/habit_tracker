@@ -1,8 +1,8 @@
-import db
-from auth import get_sheets_service
-from reader import SheetReader
-from config import Config
-from logger import logger
+import habit_tracker.db as db
+from habit_tracker.auth import get_sheets_service
+from habit_tracker.reader import SheetReader
+from habit_tracker.config import Config
+from habit_tracker.logger import logger
 
 
 def main():

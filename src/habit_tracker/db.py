@@ -1,9 +1,8 @@
-import csv
 import sqlite3
 from pathlib import Path
 
-from logger import logger
-from models import HabitEntry
+from habit_tracker.logger import logger
+from habit_tracker.models import HabitEntry
 
 
 def _create_tables(db_path: Path) -> None:

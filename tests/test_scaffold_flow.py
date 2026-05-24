@@ -1,8 +1,8 @@
 import sqlite3
 from datetime import date
 
-from db import import_entries
-from models import HabitEntry
+from habit_tracker.db import import_entries
+from habit_tracker.models import HabitEntry
 
 
 def test_import_entries_stores_habit_entries(tmp_path):

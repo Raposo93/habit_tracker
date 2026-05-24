@@ -8,7 +8,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from typing import cast
 
-from config import Config
+from habit_tracker.config import Config
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
