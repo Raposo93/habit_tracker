@@ -1,6 +1,9 @@
 import contextlib
-import logging
+from datetime import date, datetime
 from typing import List, Dict, Any
+import logging
+
+from models import HabitEntry
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +13,7 @@ class SheetReader:
         self.spreadsheet_id = spreadsheet_id
         logger.info("Initialized SheetReader")
 
-    def read_habit_names(self) -> List[str]:
+    def _read_habit_names(self) -> List[str]:
         logger.info("Reading habit names from sheet")
         result = self.sheets.spreadsheets().values().get(
             spreadsheetId=self.spreadsheet_id,
@@ -20,7 +23,7 @@ class SheetReader:
         logger.info(f"Found {len(habits)} habits: {habits}")
         return habits
 
-    def read_week_dates(self) -> List[str]:
+    def _read_week_dates(self) -> List[str]:
         logger.info("Reading week dates from sheet")
         result = self.sheets.spreadsheets().values().get(
             spreadsheetId=self.spreadsheet_id,
@@ -31,14 +34,9 @@ class SheetReader:
         logger.info(f"Week dates: {formatted}")
         return formatted
 
-    def read_weekly_data(self) -> List[Dict]:
+    def _read_weekly_data(self, num_habits: int) -> list[dict]:
         logger.info("Reading weekly data from sheet")
-        habits = self.read_habit_names()
-        if not habits:
-            logger.warning("No habits found")
-            return []
 
-        num_habits = len(habits)
         end_column_letter = chr(ord('C') + num_habits - 1)
         range_to_read = f"C2:{end_column_letter}8"
         logger.info(f"Calculated range to read: {range_to_read}")
@@ -65,3 +63,60 @@ class SheetReader:
                     })
         logger.info(f"Parsed {len(weekly_data)} weekly data entries")
         return weekly_data
+
+    def _build_entries(
+        self,
+        habit_names: List[str],
+        dates: List[str],
+        weekly_data: List[Dict[str, Any]],
+    ) -> List[HabitEntry]:
+        entries = []
+
+        for cell in weekly_data:
+            row_idx = cell["row"]
+            col_idx = cell["col"]
+
+            if row_idx >= len(dates) or col_idx >= len(habit_names):
+                continue
+
+            raw_score = str(cell.get("value", ""))
+            if not raw_score.strip() or raw_score.strip().lower() == "none":
+                continue
+
+            entry = HabitEntry(
+                entry_date=self._parse_date(dates[row_idx]),
+                habit=habit_names[col_idx],
+                score=self._parse_score(raw_score),
+                note=str(cell.get("note", "")).strip(),
+            )
+
+            entries.append(entry)
+
+        logger.info(f"Built {len(entries)} habit entries")
+        return entries
+    
+    @staticmethod
+    def _parse_date(value: str) -> date:
+        return datetime.strptime(value.strip(), "%d/%m/%Y").date()
+
+    @staticmethod
+    def _parse_score(value: str) -> float | None:
+        value = value.strip()
+
+        if not value or value.lower() == "none":
+            return None
+
+        return float(value.replace(",", "."))
+
+    def read_week_entries(self) -> List[HabitEntry]:
+        logger.info("Reading week entries from sheet")
+        habit_names = self._read_habit_names()
+
+        if not habit_names:
+            logger.warning("No habit names found")
+            return []
+
+        dates = self._read_week_dates()
+        weekly_data = self._read_weekly_data(len(habit_names))
+
+        return self._build_entries(habit_names, dates, weekly_data)
