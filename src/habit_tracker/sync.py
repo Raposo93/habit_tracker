@@ -25,14 +25,22 @@ def import_entries(entries: list[HabitEntry], db_path: Path) -> None:
     )
 
     entries_to_insert: list[HabitEntry] = []
+    entries_to_update: list[HabitEntry] = []
 
     for entry in sorted_entries:
         key = (entry.entry_date, entry.habit)
+        new_entry = (entry.score, entry.note)
 
         stored_entry = existing_entries.get(key)
 
         if stored_entry is not None:
-            logger.info(f"Skipped duplicate: {entry.entry_date} - {entry.habit}")
+            if stored_entry != new_entry:
+                entries_to_update.append(entry)
+                existing_entries[key] = new_entry
+                logger.info(f"Queued update: {entry.entry_date} - {entry.habit}")
+            else:
+                logger.info(f"Skipped duplicate: {entry.entry_date} - {entry.habit}")
+
             continue
 
         if latest_entry_date is not None and entry.entry_date < latest_entry_date:
@@ -43,8 +51,13 @@ def import_entries(entries: list[HabitEntry], db_path: Path) -> None:
             continue
 
         entries_to_insert.append(entry)
-        existing_entries[key] = (entry.score, entry.note)
+        existing_entries[key] = new_entry
 
     db.insert_entries(entries_to_insert, db_path)
+    db.update_entries(entries_to_update, db_path)
 
-    logger.info(f"Entries import completed: {len(entries_to_insert)} inserted")
+    logger.info(
+        "Entries import completed: "
+        f"{len(entries_to_insert)} inserted, "
+        f"{len(entries_to_update)} updated"
+    )

@@ -87,3 +87,29 @@ def fetch_entries_between_dates(
         (date.fromisoformat(row_date), habit): (score, note)
         for row_date, habit, score, note in rows
     }
+
+def update_entries(entries: list[HabitEntry], db_path: Path) -> None:
+    rows = [
+        (
+            entry.score,
+            entry.note,
+            entry.entry_date.isoformat(),
+            entry.habit,
+        )
+        for entry in entries
+    ]
+
+    if not rows:
+        return
+
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.executemany(
+            """
+            UPDATE habit_entries
+            SET score = ?, note = ?
+            WHERE date = ? AND habit = ?
+            """,
+            rows,
+        )
+        conn.commit()
