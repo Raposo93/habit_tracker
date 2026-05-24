@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import date
 
-from habit_tracker.db import import_entries
+from habit_tracker.sync import import_entries
 from habit_tracker.models import HabitEntry
 
 

@@ -4,3 +4,4 @@ google-auth-oauthlib
 python-dotenv
 pytest
 mypy
+ruff
