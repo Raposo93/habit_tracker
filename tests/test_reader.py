@@ -1,0 +1,112 @@
+from datetime import date
+
+from habit_tracker.models import HabitEntry
+from habit_tracker.reader import SheetReader
+
+
+def test_build_entries_keeps_explicit_zero_and_ignores_empty_or_none():
+    reader = SheetReader(sheets_service=None, spreadsheet_id="")
+
+    habit_names = [
+        "Habit review",
+        "Tidying up",
+        "Task review",
+        "Exercise",
+    ]
+    dates = ["18/08/2025"]
+
+    weekly_data = [
+        {
+            "row": 0,
+            "col": 0,
+            "value": "0",
+            "note": "Reviewed and not done",
+        },
+        {
+            "row": 0,
+            "col": 1,
+            "value": "",
+            "note": "This note should not be imported",
+        },
+        {
+            "row": 0,
+            "col": 2,
+            "value": "None",
+            "note": "Legacy empty value",
+        },
+        {
+            "row": 0,
+            "col": 3,
+            "value": "3",
+            "note": "Done",
+        },
+    ]
+
+    entries = reader._build_entries(habit_names, dates, weekly_data)
+
+    assert entries == [
+        HabitEntry(
+            entry_date=date(2025, 8, 18),
+            habit="Habit review",
+            score=0.0,
+            note="Reviewed and not done",
+        ),
+        HabitEntry(
+            entry_date=date(2025, 8, 18),
+            habit="Exercise",
+            score=3.0,
+            note="Done",
+        ),
+    ]
+
+
+def test_build_entries_parses_comma_decimal_score():
+    reader = SheetReader(sheets_service=None, spreadsheet_id="")
+
+    habit_names = ["Habit review"]
+    dates = ["18/08/2025"]
+    weekly_data = [
+        {
+            "row": 0,
+            "col": 0,
+            "value": "2,5",
+            "note": " Partial progress ",
+        },
+    ]
+
+    entries = reader._build_entries(habit_names, dates, weekly_data)
+
+    assert entries == [
+        HabitEntry(
+            entry_date=date(2025, 8, 18),
+            habit="Habit review",
+            score=2.5,
+            note="Partial progress",
+        ),
+    ]
+
+
+def test_build_entries_ignores_cells_outside_known_dates_or_habits():
+    reader = SheetReader(sheets_service=None, spreadsheet_id="")
+
+    habit_names = ["Habit review"]
+    dates = ["18/08/2025"]
+
+    weekly_data = [
+        {
+            "row": 99,
+            "col": 0,
+            "value": "1",
+            "note": "Invalid row",
+        },
+        {
+            "row": 0,
+            "col": 99,
+            "value": "1",
+            "note": "Invalid column",
+        },
+    ]
+
+    entries = reader._build_entries(habit_names, dates, weekly_data)
+
+    assert entries == []
