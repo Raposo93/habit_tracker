@@ -20,6 +20,7 @@ def _create_tables(db_path: Path) -> None:
         conn.commit()
         logger.info("Table 'habit_entries' created or already exists")
 
+
 def _parse_score(value: str) -> float | None:
     value = value.strip()
 
@@ -36,11 +37,10 @@ def _entry_exists(cursor: sqlite3.Cursor, date: str, habit: str) -> bool:
     )
     return cursor.fetchone() is not None
 
-def _is_older_than_latest_entry(cursor: sqlite3.Cursor, date: str) -> bool:
-    cursor.execute("SELECT MAX(date) FROM habit_entries")
-    max_date = cursor.fetchone()[0]
 
-    return max_date is not None and date < max_date
+def _get_latest_entry_date(cursor: sqlite3.Cursor) -> str | None:
+    cursor.execute("SELECT MAX(date) FROM habit_entries")
+    return cursor.fetchone()[0]
 
 
 def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
@@ -60,10 +60,12 @@ def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
                     logger.info(f"Skipped duplicate: {date} - {habit}")
                     continue
 
-                if _is_older_than_latest_entry(cursor, date):
-                    logger.info(f"Skipped older entry: {date}")
-                    continue
+                latest_entry_date = _get_latest_entry_date(cursor)
 
+                if latest_entry_date is not None and date < latest_entry_date:
+                    logger.info(f"Skipped older entry: {date} < {latest_entry_date} ({habit})")
+                    continue
+                
                 cursor.execute(
                     "INSERT INTO habit_entries (date, habit, score, note) VALUES (?, ?, ?, ?)",
                     (date, habit, score, note),
