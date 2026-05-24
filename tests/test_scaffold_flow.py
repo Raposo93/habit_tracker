@@ -80,6 +80,47 @@ def test_import_csv_to_database_is_idempotent(tmp_path):
 
     assert row_count == len(expected_rows)
 
+def test_import_csv_to_database_skips_entries_older_than_existing_latest_date(tmp_path):
+    existing_csv_path = tmp_path / "existing.csv"
+    older_csv_path = tmp_path / "older.csv"
+    db_path = tmp_path / "habit_tracker.db"
+
+    existing_csv_path.write_text(
+        "\n".join(
+            [
+                "date,habit,score,note",
+                "2025-08-20,Habit review,3,Existing newer entry",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    older_csv_path.write_text(
+        "\n".join(
+            [
+                "date,habit,score,note",
+                "2025-08-19,Habit review,1,Older habit review entry",
+                "2025-08-19,Tidying up,2,Older tidying entry",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    import_csv_to_database(existing_csv_path, db_path)
+    import_csv_to_database(older_csv_path, db_path)
+
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT date, habit, score, note
+            FROM habit_entries
+            ORDER BY date, habit
+            """
+        ).fetchall()
+
+    assert rows == [
+        ("2025-08-20", "Habit review", 3.0, "Existing newer entry"),
+    ]
 
 def _read_expected_rows_from_csv(csv_path):
     with open(csv_path, newline="", encoding="utf-8") as file:

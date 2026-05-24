@@ -66,7 +66,7 @@ def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
                 if latest_entry_date is not None and date < latest_entry_date:
                     logger.info(
                         f"Skipped older entry: {date} < {latest_entry_date} ({habit})"
-                        )
+                    )
                     continue
 
                 cursor.execute(
