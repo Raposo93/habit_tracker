@@ -75,37 +75,3 @@ def import_entries(entries: list[HabitEntry], db_path: Path) -> None:
 
         conn.commit()
         logger.info("Entries import completed and committed")
-
-def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
-    _create_tables(db_path)
-    with sqlite3.connect(db_path) as conn:
-        cursor = conn.cursor()
-
-        with open(csv_path, newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                date = row["date"]
-                habit = row["habit"]
-                score = _parse_score(row["score"])
-                note = row["note"]
-
-                if _entry_exists(cursor, date, habit):
-                    logger.info(f"Skipped duplicate: {date} - {habit}")
-                    continue
-
-                latest_entry_date = _get_latest_entry_date(cursor)
-
-                if latest_entry_date is not None and date < latest_entry_date:
-                    logger.info(
-                        f"Skipped older entry: {date} < {latest_entry_date} ({habit})"
-                    )
-                    continue
-
-                cursor.execute(
-                    "INSERT INTO habit_entries (date, habit, score, note) VALUES (?, ?, ?, ?)",
-                    (date, habit, score, note),
-                )
-                logger.info(f"Inserted: {date} - {habit} - {score} - {note}")
-
-        conn.commit()
-        logger.info("CSV import completed and committed")
