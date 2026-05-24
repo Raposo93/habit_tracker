@@ -22,15 +22,6 @@ def _create_tables(db_path: Path) -> None:
         logger.info("Table 'habit_entries' created or already exists")
 
 
-def _parse_score(value: str) -> float | None:
-    value = value.strip()
-
-    if not value:
-        return None
-
-    return float(value.replace(",", "."))
-
-
 def _entry_exists(cursor: sqlite3.Cursor, date: str, habit: str) -> bool:
     cursor.execute(
         "SELECT 1 FROM habit_entries WHERE date = ? AND habit = ?",

@@ -6,5 +6,5 @@ from datetime import date
 class HabitEntry:
     entry_date: date
     habit: str
-    score: float | None
+    score: float
     note: str = ""

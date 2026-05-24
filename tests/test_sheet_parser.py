@@ -4,12 +4,6 @@ from habit_tracker.models import HabitEntry
 from habit_tracker.sheet_parser import build_entries
 
 
-from datetime import date
-
-from habit_tracker.models import HabitEntry
-from habit_tracker.sheet_parser import build_entries
-
-
 def test_build_entries_keeps_explicit_zero_and_ignores_empty_or_none():
     habit_names = [
         "Habit review",
