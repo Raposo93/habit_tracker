@@ -60,6 +60,9 @@ def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
                     logger.info(f"Skipped duplicate: {date} - {habit}")
                     continue
 
+                if _is_older_than_latest_entry(cursor, date):
+                    logger.info(f"Skipped older entry: {date}")
+                    continue
 
                 cursor.execute(
                     "INSERT INTO habit_entries (date, habit, score, note) VALUES (?, ?, ?, ?)",
