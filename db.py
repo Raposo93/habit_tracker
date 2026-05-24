@@ -28,12 +28,20 @@ def _parse_score(value: str) -> float | None:
 
     return float(value.replace(",", "."))
 
+
 def _entry_exists(cursor: sqlite3.Cursor, date: str, habit: str) -> bool:
     cursor.execute(
         "SELECT 1 FROM habit_entries WHERE date = ? AND habit = ?",
-        (date, habit)
+        (date, habit),
     )
     return cursor.fetchone() is not None
+
+def _is_older_than_latest_entry(cursor: sqlite3.Cursor, date: str) -> bool:
+    cursor.execute("SELECT MAX(date) FROM habit_entries")
+    max_date = cursor.fetchone()[0]
+
+    return max_date is not None and date < max_date
+
 
 def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
     _create_tables(db_path)
@@ -51,16 +59,11 @@ def import_csv_to_database(csv_path: Path, db_path: Path) -> None:
                 if _entry_exists(cursor, date, habit):
                     logger.info(f"Skipped duplicate: {date} - {habit}")
                     continue
-                
-                cursor.execute("SELECT MAX(date) FROM habit_entries")
-                max_date = cursor.fetchone()[0]
-                if max_date and date < max_date:
-                    logger.info(f"Skipped older entry: {date} < {max_date} ({habit})")
-                    continue
+
 
                 cursor.execute(
                     "INSERT INTO habit_entries (date, habit, score, note) VALUES (?, ?, ?, ?)",
-                    (date, habit, score, note)
+                    (date, habit, score, note),
                 )
                 logger.info(f"Inserted: {date} - {habit} - {score} - {note}")
 
