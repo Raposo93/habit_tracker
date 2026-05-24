@@ -1,10 +1,9 @@
 import contextlib
-from datetime import date, datetime
-from typing import List, Dict, Any
+from typing import List, Any
 import logging
 
 from habit_tracker.models import HabitEntry
-
+from habit_tracker.sheet_parser import build_entries
 logger = logging.getLogger(__name__)
 
 class SheetReader:
@@ -64,49 +63,6 @@ class SheetReader:
         logger.info(f"Parsed {len(weekly_data)} weekly data entries")
         return weekly_data
 
-    def _build_entries(
-        self,
-        habit_names: List[str],
-        dates: List[str],
-        weekly_data: List[Dict[str, Any]],
-    ) -> List[HabitEntry]:
-        entries = []
-
-        for cell in weekly_data:
-            row_idx = cell["row"]
-            col_idx = cell["col"]
-
-            if row_idx >= len(dates) or col_idx >= len(habit_names):
-                continue
-
-            raw_score = str(cell.get("value", ""))
-            if not raw_score.strip() or raw_score.strip().lower() == "none":
-                continue
-
-            entry = HabitEntry(
-                entry_date=self._parse_date(dates[row_idx]),
-                habit=habit_names[col_idx],
-                score=self._parse_score(raw_score),
-                note=str(cell.get("note", "")).strip(),
-            )
-
-            entries.append(entry)
-
-        logger.info(f"Built {len(entries)} habit entries")
-        return entries
-    
-    @staticmethod
-    def _parse_date(value: str) -> date:
-        return datetime.strptime(value.strip(), "%d/%m/%Y").date()
-
-    @staticmethod
-    def _parse_score(value: str) -> float | None:
-        value = value.strip()
-
-        if not value or value.lower() == "none":
-            return None
-
-        return float(value.replace(",", "."))
 
     def read_week_entries(self) -> List[HabitEntry]:
         logger.info("Reading week entries from sheet")
@@ -119,4 +75,4 @@ class SheetReader:
         dates = self._read_week_dates()
         weekly_data = self._read_weekly_data(len(habit_names))
 
-        return self._build_entries(habit_names, dates, weekly_data)
+        return build_entries(habit_names, dates, weekly_data)

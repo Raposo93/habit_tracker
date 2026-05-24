@@ -1,12 +1,16 @@
 from datetime import date
 
 from habit_tracker.models import HabitEntry
-from habit_tracker.reader import SheetReader
+from habit_tracker.sheet_parser import build_entries
+
+
+from datetime import date
+
+from habit_tracker.models import HabitEntry
+from habit_tracker.sheet_parser import build_entries
 
 
 def test_build_entries_keeps_explicit_zero_and_ignores_empty_or_none():
-    reader = SheetReader(sheets_service=None, spreadsheet_id="")
-
     habit_names = [
         "Habit review",
         "Tidying up",
@@ -42,7 +46,7 @@ def test_build_entries_keeps_explicit_zero_and_ignores_empty_or_none():
         },
     ]
 
-    entries = reader._build_entries(habit_names, dates, weekly_data)
+    entries = build_entries(habit_names, dates, weekly_data)
 
     assert entries == [
         HabitEntry(
@@ -61,8 +65,6 @@ def test_build_entries_keeps_explicit_zero_and_ignores_empty_or_none():
 
 
 def test_build_entries_parses_comma_decimal_score():
-    reader = SheetReader(sheets_service=None, spreadsheet_id="")
-
     habit_names = ["Habit review"]
     dates = ["18/08/2025"]
     weekly_data = [
@@ -74,7 +76,7 @@ def test_build_entries_parses_comma_decimal_score():
         },
     ]
 
-    entries = reader._build_entries(habit_names, dates, weekly_data)
+    entries = build_entries(habit_names, dates, weekly_data)
 
     assert entries == [
         HabitEntry(
@@ -87,8 +89,6 @@ def test_build_entries_parses_comma_decimal_score():
 
 
 def test_build_entries_ignores_cells_outside_known_dates_or_habits():
-    reader = SheetReader(sheets_service=None, spreadsheet_id="")
-
     habit_names = ["Habit review"]
     dates = ["18/08/2025"]
 
@@ -107,6 +107,6 @@ def test_build_entries_ignores_cells_outside_known_dates_or_habits():
         },
     ]
 
-    entries = reader._build_entries(habit_names, dates, weekly_data)
+    entries = build_entries(habit_names, dates, weekly_data)
 
     assert entries == []
