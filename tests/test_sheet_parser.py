@@ -104,3 +104,69 @@ def test_build_entries_ignores_cells_outside_known_dates_or_habits():
     entries = build_entries(habit_names, dates, weekly_data)
 
     assert entries == []
+
+def test_build_entries_ignores_cell_without_score_even_when_note_exists():
+    habit_names = ["Habit review"]
+    dates = ["18/08/2025"]
+
+    weekly_data = [
+        {
+            "row": 0,
+            "col": 0,
+            "value": "",
+            "note": "This note should not create an entry",
+        },
+    ]
+
+    entries = build_entries(habit_names, dates, weekly_data)
+
+    assert entries == []
+
+
+def test_build_entries_normalizes_empty_note_to_empty_string():
+    habit_names = ["Habit review"]
+    dates = ["18/08/2025"]
+
+    weekly_data = [
+        {
+            "row": 0,
+            "col": 0,
+            "value": "2",
+            "note": "   ",
+        },
+    ]
+
+    entries = build_entries(habit_names, dates, weekly_data)
+
+    assert entries == [
+        HabitEntry(
+            entry_date=date(2025, 8, 18),
+            habit="Habit review",
+            score=2.0,
+            note="",
+        ),
+    ]
+
+def test_build_entries_strips_note():
+    habit_names = ["Habit review"]
+    dates = ["18/08/2025"]
+
+    weekly_data = [
+        {
+            "row": 0,
+            "col": 0,
+            "value": "2",
+            "note": "  Some progress made  ",
+        },
+    ]
+
+    entries = build_entries(habit_names, dates, weekly_data)
+
+    assert entries == [
+        HabitEntry(
+            entry_date=date(2025, 8, 18),
+            habit="Habit review",
+            score=2.0,
+            note="Some progress made",
+        ),
+    ]
