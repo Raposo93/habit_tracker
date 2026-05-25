@@ -5,7 +5,7 @@ from pathlib import Path
 from habit_tracker.models import HabitEntry
 
 EntryKey = tuple[date, str]
-StoredEntry = tuple[float | None, str | None]
+StoredEntry = tuple[float, str]
 
 
 def create_tables(db_path: Path) -> None:
@@ -18,7 +18,7 @@ def create_tables(db_path: Path) -> None:
             CREATE TABLE IF NOT EXISTS habit_entries (
                 date TEXT NOT NULL,
                 habit TEXT NOT NULL,
-                score REAL,
+                score REAL NOT NULL,
                 note TEXT,
                 PRIMARY KEY (date, habit)
             )
