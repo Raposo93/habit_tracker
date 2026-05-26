@@ -147,6 +147,7 @@ def test_build_entries_normalizes_empty_note_to_empty_string():
         ),
     ]
 
+
 def test_build_entries_strips_note():
     habit_names = ["Habit review"]
     dates = ["18/08/2025"]

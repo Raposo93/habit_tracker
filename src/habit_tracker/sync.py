@@ -1,25 +1,26 @@
-from pathlib import Path
-
-from habit_tracker import db
+from habit_tracker.repository import HabitEntryRepository
 from habit_tracker.logger import logger
 from habit_tracker.models import HabitEntry
 
 
-def import_entries(entries: list[HabitEntry], db_path: Path) -> None:
+def import_entries(
+    entries: list[HabitEntry], 
+    repo: HabitEntryRepository,
+) -> None:
+    
     if not entries:
         logger.info("No entries to import")
         return
 
-    db.create_tables(db_path)
+    repo.create_tables()
 
     sorted_entries = sorted(entries, key=lambda item: (item.entry_date, item.habit))
 
     start_date = sorted_entries[0].entry_date.isoformat()
     end_date = sorted_entries[-1].entry_date.isoformat()
 
-    latest_entry_date = db.fetch_latest_entry_date(db_path)
-    existing_entries = db.fetch_entries_between_dates(
-        db_path,
+    latest_entry_date = repo.fetch_latest_entry_date()
+    existing_entries = repo.fetch_entries_between_dates(
         start_date,
         end_date,
     )
@@ -53,8 +54,8 @@ def import_entries(entries: list[HabitEntry], db_path: Path) -> None:
         entries_to_insert.append(entry)
         existing_entries[key] = new_entry
 
-    db.insert_entries(entries_to_insert, db_path)
-    db.update_entries(entries_to_update, db_path)
+    repo.insert_entries(entries_to_insert)
+    repo.update_entries(entries_to_update)
 
     logger.info(
         "Entries import completed: "
