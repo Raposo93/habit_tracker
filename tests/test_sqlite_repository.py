@@ -14,8 +14,8 @@ def test_fetch_latest_entry_date_returns_none_when_repository_is_empty(tmp_path)
 
 def test_insert_entries_and_fetch_latest_entry_date(tmp_path):
     db_path = tmp_path / "habit_tracker.db"
-    repository = SqliteHabitEntryRepository(db_path)
-    repository.create_tables()
+    repo = SqliteHabitEntryRepository(db_path)
+    repo.create_tables()
 
     entries = [
         HabitEntry(
@@ -32,15 +32,15 @@ def test_insert_entries_and_fetch_latest_entry_date(tmp_path):
         ),
     ]
 
-    repository.insert_entries(entries)
+    repo.insert_entries(entries)
 
-    assert repository.fetch_latest_entry_date() == date(2026, 5, 25)
+    assert repo.fetch_latest_entry_date() == date(2026, 5, 25)
 
 
 def test_fetch_entries_between_dates(tmp_path):
     db_path = tmp_path / "habit_tracker.db"
-    repository = SqliteHabitEntryRepository(db_path)
-    repository.create_tables()
+    repo = SqliteHabitEntryRepository(db_path)
+    repo.create_tables()
 
     entries = [
         HabitEntry(
@@ -63,9 +63,9 @@ def test_fetch_entries_between_dates(tmp_path):
         ),
     ]
 
-    repository.insert_entries(entries)
+    repo.insert_entries(entries)
 
-    stored_entries = repository.fetch_entries_between_dates(
+    stored_entries = repo.fetch_entries_between_dates(
         start_date="2026-05-24",
         end_date="2026-05-25",
     )
@@ -78,10 +78,10 @@ def test_fetch_entries_between_dates(tmp_path):
 
 def test_update_entries_updates_existing_entries(tmp_path):
     db_path = tmp_path / "habit_tracker.db"
-    repository = SqliteHabitEntryRepository(db_path)
-    repository.create_tables()
+    repo = SqliteHabitEntryRepository(db_path)
+    repo.create_tables()
 
-    repository.insert_entries(
+    repo.insert_entries(
         [
             HabitEntry(
                 entry_date=date(2026, 5, 25),
@@ -92,7 +92,7 @@ def test_update_entries_updates_existing_entries(tmp_path):
         ]
     )
 
-    repository.update_entries(
+    repo.update_entries(
         [
             HabitEntry(
                 entry_date=date(2026, 5, 25),
@@ -103,7 +103,7 @@ def test_update_entries_updates_existing_entries(tmp_path):
         ]
     )
 
-    stored_entries = repository.fetch_entries_between_dates(
+    stored_entries = repo.fetch_entries_between_dates(
         start_date="2026-05-25",
         end_date="2026-05-25",
     )

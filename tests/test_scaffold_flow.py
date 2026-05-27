@@ -7,7 +7,7 @@ from habit_tracker.sqlite_repository import SqliteHabitEntryRepository
 
 def test_import_entries_stores_habit_entries(tmp_path):
     db_path = tmp_path / "habit_tracker.db"
-    repository = SqliteHabitEntryRepository(db_path)
+    repo = SqliteHabitEntryRepository(db_path)
     entries = [
         HabitEntry(
             entry_date=date(2025, 8, 18),
@@ -23,7 +23,7 @@ def test_import_entries_stores_habit_entries(tmp_path):
         ),
     ]
 
-    import_entries(entries, repository)
+    import_entries(entries, repo)
 
     with sqlite3.connect(db_path) as conn:
         rows = conn.execute(
