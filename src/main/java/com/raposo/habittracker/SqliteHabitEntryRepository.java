@@ -22,8 +22,7 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
     @Override
     public Map<EntryKey, StoredEntry> findEntriesBetweenDates(
             LocalDate startDate,
-            LocalDate endDate
-    ) {
+            LocalDate endDate) {
         return new HashMap<>();
     }
 

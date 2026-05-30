@@ -4,12 +4,10 @@ import java.time.LocalDate;
 
 public record DateRange(
         LocalDate startDate,
-        LocalDate endDate
-) {
+        LocalDate endDate) {
     public static DateRange between(String startDate, String endDate) {
         return new DateRange(
                 LocalDate.parse(startDate),
-                LocalDate.parse(endDate)
-        );
+                LocalDate.parse(endDate));
     }
 }

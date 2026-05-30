@@ -10,8 +10,7 @@ public interface HabitEntryRepository {
 
     Map<EntryKey, StoredEntry> findEntriesBetweenDates(
             LocalDate startDate,
-            LocalDate endDate
-    );
+            LocalDate endDate);
 
     void insertEntries(List<HabitEntry> entries);
 
