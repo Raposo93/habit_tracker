@@ -1,13 +1,15 @@
 package com.raposo.habittracker;
 
+import com.google.api.services.sheets.v4.Sheets;
+
 import java.util.List;
 
 public class SheetReader implements HabitEntryReader {
-    private final GoogleAuth auth;
+    private final Sheets sheetsService;
     private final String spreadsheetId;
 
-    public SheetReader(GoogleAuth auth, String spreadsheetId) {
-        this.auth = auth;
+    public SheetReader(Sheets sheetsService, String spreadsheetId) {
+        this.sheetsService = sheetsService;
         this.spreadsheetId = spreadsheetId;
     }
 

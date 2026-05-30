@@ -13,8 +13,9 @@ public class CommandParser {
             case "--import" -> {
                 GoogleAuth auth = new GoogleAuth(config);
 
-                SheetReader reader = new SheetReader(auth, config.SPREADSHEET_ID);
-
+                SheetReader reader = new SheetReader(
+                        auth.createSheetsService(),
+                        config.SPREADSHEET_ID);
                 ImportEntriesUseCase importEntries = new ImportEntriesUseCase(reader, repository);
 
                 yield new ImportCommand(importEntries);
