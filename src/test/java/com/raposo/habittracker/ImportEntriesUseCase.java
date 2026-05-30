@@ -96,7 +96,7 @@ class ImportEntriesUseCaseTest {
         HabitEntry existingEntry = entry("2026-05-26", "Sleep", 8.0, "Good");
         HabitEntry oldEntry = entry("2026-05-20", "Sleep", 6.0, "Good");
 
-        FakeHabitEntryReader reader = new FakeHabitEntryReader(List.of(existingEntry));
+        FakeHabitEntryReader reader = new FakeHabitEntryReader(List.of(oldEntry));
         InMemoryHabitEntryRepository repository = new InMemoryHabitEntryRepository();
         repository.saveExisting(existingEntry);
 
@@ -124,10 +124,6 @@ class ImportEntriesUseCaseTest {
             entries.put(
                     new EntryKey(entry.entryDate(), entry.habit()),
                     new StoredEntry(entry.score(), entry.note()));
-        }
-
-        boolean contains(HabitEntry entry) {
-            return entries.containsKey(new EntryKey(entry.entryDate(), entry.habit()));
         }
 
         StoredEntry get(HabitEntry entry) {
