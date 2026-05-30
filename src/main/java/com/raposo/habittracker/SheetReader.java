@@ -2,7 +2,7 @@ package com.raposo.habittracker;
 
 import java.util.List;
 
-public class SheetReader {
+public class SheetReader implements HabitEntryReader {
     private final GoogleAuth auth;
     private final String spreadsheetId;
 
@@ -11,7 +11,8 @@ public class SheetReader {
         this.spreadsheetId = spreadsheetId;
     }
 
-    public List<HabitEntry> readWeekEntries() {
+    @Override
+    public List<HabitEntry> readEntries() {
         return List.of();
     }
 }

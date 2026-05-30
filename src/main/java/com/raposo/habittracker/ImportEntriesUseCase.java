@@ -12,16 +12,16 @@ import java.util.logging.Logger;
 public class ImportEntriesUseCase {
     private static final Logger logger = Logger.getLogger(ImportEntriesUseCase.class.getName());
 
-    private final SheetReader reader;
+    private final HabitEntryReader reader;
     private final HabitEntryRepository repository;
 
-    public ImportEntriesUseCase(SheetReader reader, HabitEntryRepository repository) {
+    public ImportEntriesUseCase(HabitEntryReader reader, HabitEntryRepository repository) {
         this.reader = reader;
         this.repository = repository;
     }
 
     public void execute() {
-        List<HabitEntry> entries = reader.readWeekEntries();
+        List<HabitEntry> entries = reader.readEntries();
 
         if (entries.isEmpty()) {
             logger.info("No entries to import");
