@@ -3,13 +3,13 @@ package com.raposo.habittracker;
 public class QueryBetweenDatesCommand implements Command {
 
     public QueryBetweenDatesCommand(GetEntriesBetweenDatesUseCase getEntries, DateRange range) {
-        //TODO Auto-generated constructor stub
+        // TODO
     }
 
     @Override
     public void execute() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'execute'");
+        // TODO
+        System.out.println("Query between dates is not implemented yet.");
     }
 
 }
