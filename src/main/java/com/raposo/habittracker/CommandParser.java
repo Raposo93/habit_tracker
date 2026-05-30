@@ -15,7 +15,8 @@ public class CommandParser {
 
                 SheetReader reader = new SheetReader(
                         auth.createSheetsService(),
-                        config.SPREADSHEET_ID);
+                        config.SPREADSHEET_ID
+                        );
                 ImportEntriesUseCase importEntries = new ImportEntriesUseCase(reader, repository);
 
                 yield new ImportCommand(importEntries);

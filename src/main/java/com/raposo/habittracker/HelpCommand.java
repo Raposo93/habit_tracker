@@ -8,5 +8,5 @@ public class HelpCommand implements Command {
         System.out.println("  --query-btw-dates <start-date> <end-date>");
         System.out.println("  --query-last-week");
     }
-    
+
 }
