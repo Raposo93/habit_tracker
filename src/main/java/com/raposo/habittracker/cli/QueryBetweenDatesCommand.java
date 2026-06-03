@@ -1,4 +1,7 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.cli;
+
+import com.raposo.habittracker.application.GetEntriesBetweenDatesUseCase;
+import com.raposo.habittracker.domain.DateRange;
 
 public class QueryBetweenDatesCommand implements Command {
 

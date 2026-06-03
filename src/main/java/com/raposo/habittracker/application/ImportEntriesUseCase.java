@@ -1,4 +1,4 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.application;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -8,6 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
+
+import com.raposo.habittracker.application.port.HabitEntryReader;
+import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.domain.EntryKey;
+import com.raposo.habittracker.domain.HabitEntry;
+import com.raposo.habittracker.domain.StoredEntry;
 
 public class ImportEntriesUseCase {
     private static final Logger logger = Logger.getLogger(ImportEntriesUseCase.class.getName());

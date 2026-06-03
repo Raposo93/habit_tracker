@@ -1,4 +1,13 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.cli;
+
+import com.raposo.habittracker.application.GetEntriesBetweenDatesUseCase;
+import com.raposo.habittracker.application.GetWeekEntriesUseCase;
+import com.raposo.habittracker.application.ImportEntriesUseCase;
+import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.config.Config;
+import com.raposo.habittracker.domain.DateRange;
+import com.raposo.habittracker.infrastructure.google.GoogleAuth;
+import com.raposo.habittracker.infrastructure.google.SheetReader;
 
 public class CommandParser {
     public static Command parse(

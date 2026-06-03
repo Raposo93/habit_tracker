@@ -1,4 +1,6 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.cli;
+
+import com.raposo.habittracker.application.ImportEntriesUseCase;
 
 public class ImportCommand implements Command {
     private final ImportEntriesUseCase importEntries;

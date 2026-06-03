@@ -1,4 +1,4 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.cli;
 
 public class HelpCommand implements Command {
     @Override

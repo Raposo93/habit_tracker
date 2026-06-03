@@ -1,4 +1,4 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.infrastructure.google;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -12,6 +12,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.raposo.habittracker.config.Config;
 
 import java.io.IOException;
 import java.io.InputStream;

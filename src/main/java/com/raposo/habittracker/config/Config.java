@@ -1,4 +1,4 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.config;
 
 import java.nio.file.Path;
 

@@ -1,4 +1,4 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.domain;
 
 public record StoredEntry(
                 double score,

@@ -1,4 +1,4 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.infrastructure.google;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.CellData;
@@ -7,6 +7,8 @@ import com.google.api.services.sheets.v4.model.RowData;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.raposo.habittracker.application.port.HabitEntryReader;
+import com.raposo.habittracker.domain.HabitEntry;
 
 import java.io.IOException;
 import java.time.LocalDate;

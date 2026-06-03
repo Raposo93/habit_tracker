@@ -1,4 +1,6 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.application;
+
+import com.raposo.habittracker.application.port.HabitEntryRepository;
 
 public class GetEntriesBetweenDatesUseCase {
 

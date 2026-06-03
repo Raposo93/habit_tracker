@@ -1,6 +1,12 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.application;
 
 import org.junit.jupiter.api.Test;
+
+import com.raposo.habittracker.application.port.HabitEntryReader;
+import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.domain.EntryKey;
+import com.raposo.habittracker.domain.HabitEntry;
+import com.raposo.habittracker.domain.StoredEntry;
 
 import java.time.LocalDate;
 import java.util.HashMap;

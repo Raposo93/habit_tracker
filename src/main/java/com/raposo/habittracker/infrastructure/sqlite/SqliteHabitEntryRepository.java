@@ -1,4 +1,4 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.infrastructure.sqlite;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,6 +14,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.domain.EntryKey;
+import com.raposo.habittracker.domain.HabitEntry;
+import com.raposo.habittracker.domain.StoredEntry;
 
 public class SqliteHabitEntryRepository implements HabitEntryRepository {
     private final Path dbPath;

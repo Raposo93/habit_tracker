@@ -1,9 +1,13 @@
-package com.raposo.habittracker;
+package com.raposo.habittracker.application.port;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import com.raposo.habittracker.domain.EntryKey;
+import com.raposo.habittracker.domain.HabitEntry;
+import com.raposo.habittracker.domain.StoredEntry;
 
 public interface HabitEntryRepository {
     Optional<LocalDate> findLatestEntryDate();
