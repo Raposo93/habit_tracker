@@ -39,20 +39,18 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         }
 
         output.append("\nSummary:\n");
-        output.append("| habit | previous_avg | current_avg | delta | trend |\n");
-        output.append("|-------|--------------|-------------|-------|-------|\n");
+        output.append("| habit | average_score | recorded_days | missing_days |\n");
+        output.append("|-------|---------------|---------------|--------------|\n");
 
         for (HabitSummaryRow row : report.summary()) {
             output.append("| ")
                     .append(row.habit())
                     .append(" | ")
-                    .append(row.previousAvg())
+                    .append(row.averageScore())
                     .append(" | ")
-                    .append(row.currentAvg())
+                    .append(row.recordedDays())
                     .append(" | ")
-                    .append(formatDelta(row.delta()))
-                    .append(" | ")
-                    .append(formatTrend(row.trend()))
+                    .append(row.missingDays())
                     .append(" |\n");
         }
 

@@ -1,11 +1,10 @@
 package com.raposo.habittracker.application;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Map;
 
 import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.domain.DateRange;
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.StoredEntry;
 
@@ -18,11 +17,10 @@ public class GetWeekEntriesUseCase {
     }
 
     public Map<EntryKey, StoredEntry> execute(LocalDate referenceDate) {
-        LocalDate startDate = referenceDate.with(
-                TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
-        );
-        LocalDate endDate = startDate.plusDays(6);
+        DateRange range = DateRange.weekOf(referenceDate);
 
-        return repository.findEntriesBetweenDates(startDate, endDate);
+        return repository.findEntriesBetweenDates(
+                range.startDate(),
+                range.endDate());
     }
 }

@@ -18,8 +18,7 @@ public class GetHabitReportBetweenDatesUseCase {
         return reportBuilder.build(
                 repository.findEntriesBetweenDates(
                         range.startDate(),
-                        range.endDate()
-                )
-        );
+                        range.endDate()),
+                range);
     }
 }

@@ -17,6 +17,12 @@ public record DateRange(LocalDate startDate, LocalDate endDate) {
         }
     }
 
+    public static DateRange between(String startDate, String endDate) {
+        return new DateRange(
+                LocalDate.parse(startDate),
+                LocalDate.parse(endDate));
+    }
+
     public static DateRange of(LocalDate startDate, LocalDate endDate) {
         return new DateRange(startDate, endDate);
     }
@@ -25,8 +31,7 @@ public record DateRange(LocalDate startDate, LocalDate endDate) {
         Objects.requireNonNull(referenceDate, "referenceDate cannot be null");
 
         LocalDate startOfWeek = referenceDate.with(
-                TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)
-        );
+                TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         return new DateRange(startOfWeek, startOfWeek.plusDays(6));
     }
@@ -46,7 +51,6 @@ public record DateRange(LocalDate startDate, LocalDate endDate) {
 
         return new DateRange(
                 startDate.minusDays(days),
-                endDate.minusDays(days)
-        );
+                endDate.minusDays(days));
     }
 }

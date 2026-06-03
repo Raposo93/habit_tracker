@@ -4,6 +4,5 @@ public record HabitSummaryRow(
         String habit,
         double averageScore,
         int recordedDays,
-        int missingDays
-) {
+        int missingDays) {
 }
