@@ -1,8 +1,6 @@
 package com.raposo.habittracker.cli;
 
-import com.raposo.habittracker.application.GetEntriesBetweenDatesUseCase;
 import com.raposo.habittracker.application.GetHabitReportBetweenDatesUseCase;
-import com.raposo.habittracker.application.GetWeekEntriesUseCase;
 import com.raposo.habittracker.application.ImportEntriesUseCase;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
 import com.raposo.habittracker.cli.formatter.HabitReportFormatter;
@@ -48,9 +46,11 @@ public class CommandParser {
             }
 
             case "--query-last-week" -> {
-                GetWeekEntriesUseCase getWeekEntries = new GetWeekEntriesUseCase(repository);
+                GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(repository);
 
-                yield new QueryLastWeekCommand(getWeekEntries);
+                HabitReportFormatter formatter = new MarkdownHabitReportFormatter();
+
+                yield new QueryLastWeekCommand(getReport, formatter);
             }
 
             default -> new HelpCommand();
