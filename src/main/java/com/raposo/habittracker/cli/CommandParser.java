@@ -1,9 +1,12 @@
 package com.raposo.habittracker.cli;
 
 import com.raposo.habittracker.application.GetEntriesBetweenDatesUseCase;
+import com.raposo.habittracker.application.GetHabitReportBetweenDatesUseCase;
 import com.raposo.habittracker.application.GetWeekEntriesUseCase;
 import com.raposo.habittracker.application.ImportEntriesUseCase;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.cli.formatter.HabitReportFormatter;
+import com.raposo.habittracker.cli.formatter.MarkdownHabitReportFormatter;
 import com.raposo.habittracker.config.Config;
 import com.raposo.habittracker.domain.DateRange;
 import com.raposo.habittracker.infrastructure.google.GoogleAuth;
@@ -24,8 +27,7 @@ public class CommandParser {
 
                 SheetReader reader = new SheetReader(
                         auth.createSheetsService(),
-                        config.spreadsheetId()
-                        );
+                        config.spreadsheetId());
                 ImportEntriesUseCase importEntries = new ImportEntriesUseCase(reader, repository);
 
                 yield new ImportCommand(importEntries);
@@ -38,9 +40,11 @@ public class CommandParser {
 
                 DateRange range = DateRange.between(args[1], args[2]);
 
-                GetEntriesBetweenDatesUseCase getEntries = new GetEntriesBetweenDatesUseCase(repository);
+                GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(repository);
 
-                yield new QueryBetweenDatesCommand(getEntries, range);
+                HabitReportFormatter formatter = new MarkdownHabitReportFormatter();
+
+                yield new QueryBetweenDatesCommand(getReport, formatter, range);
             }
 
             case "--query-last-week" -> {
