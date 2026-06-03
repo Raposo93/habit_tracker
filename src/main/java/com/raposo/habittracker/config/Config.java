@@ -9,11 +9,11 @@ public class Config {
     public final Path TOKENS_DIRECTORY_PATH = Path.of("tokens");
     public final String SPREADSHEET_ID = System.getenv("SPREADSHEET_ID");
 
-    public Config() {
+    public String spreadsheetId() {
         if (SPREADSHEET_ID == null || SPREADSHEET_ID.isBlank()) {
-            throw new IllegalStateException(
-                    "SPREADSHEET_ID is not configured. "
-                            + "\n Run: export SPREADSHEET_ID=\"your-spreadsheet-id\"");
+            throw new IllegalStateException("SPREADSHEET_ID is not configured.");
         }
+
+        return SPREADSHEET_ID;
     }
 }
