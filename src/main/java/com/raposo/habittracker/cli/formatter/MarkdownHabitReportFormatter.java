@@ -16,7 +16,10 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
                 .append(report.context().scoreScale())
                 .append("\n");
         output.append("- Week starts on Monday and ends on Sunday\n");
-        output.append("- Missing score means no data, not zero\n\n");
+        output.append("- Entries contain only recorded habit entries\n");
+        output.append("- Missing entry means no recorded score, not an explicit 0\n");
+        output.append("- score 0 is a recorded entry\n");
+        output.append("- average_score = sum(recorded entry scores) / 7, so missing days contribute 0\n\n");
 
         output.append("Entries:\n");
         output.append("| date | weekday | week_start | habit | score | note |\n");
