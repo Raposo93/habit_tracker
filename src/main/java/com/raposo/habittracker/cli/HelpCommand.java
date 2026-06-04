@@ -5,7 +5,7 @@ public class HelpCommand implements Command {
     public void execute() {
         System.out.println("Usage:");
         System.out.println("  --import");
-        System.out.println("  --query-btw-dates <start-date> <end-date>");
+        System.out.println("  --query-between-dates <start-date> <end-date>");
         System.out.println("  --query-last-week");
     }
 

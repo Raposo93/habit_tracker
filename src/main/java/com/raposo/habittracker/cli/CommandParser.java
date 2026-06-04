@@ -31,7 +31,7 @@ public class CommandParser {
                 yield new ImportCommand(importEntries);
             }
 
-            case "--query-btw-dates" -> {
+            case "--query-between-dates" -> {
                 if (args.length != 3) {
                     yield new HelpCommand();
                 }
