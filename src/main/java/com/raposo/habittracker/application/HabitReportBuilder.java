@@ -19,13 +19,17 @@ import com.raposo.habittracker.domain.StoredEntry;
 
 public class HabitReportBuilder {
 
-        public HabitReport build(Map<EntryKey, StoredEntry> entries, DateRange range) {
+        public HabitReport build(
+                        Map<EntryKey, StoredEntry> currentEntries,
+                        DateRange currentRange,
+                        Map<EntryKey, StoredEntry> previousEntries,
+                        DateRange previousRange) {
                 ReportContext context = new ReportContext(
                                 "0 = bad, 1 = weak, 2 = acceptable, 3 = good",
                                 "Week starts on Monday and ends on Sunday",
                                 "Missing entry means no stored data; summary averages treat it as 0");
 
-                List<EntryReportRow> entryRows = entries.entrySet().stream()
+                List<EntryReportRow> entryRows = currentEntries.entrySet().stream()
                                 .sorted(Comparator
                                                 .comparing((Map.Entry<EntryKey, StoredEntry> entry) -> entry.getKey()
                                                                 .entryDate())
@@ -33,9 +37,13 @@ public class HabitReportBuilder {
                                 .map(entry -> toEntryReportRow(entry.getKey(), entry.getValue()))
                                 .toList();
 
-                List<HabitSummaryRow> summaryRows = buildSummaryRows(entries, range);
+                List<HabitSummaryRow> summaryRows = buildSummaryRows(currentEntries, currentRange);
 
-                return new HabitReport(context, entryRows, summaryRows);
+                return new HabitReport(context, 
+                        currentRange, 
+                        previousRange,
+                        entryRows,
+                        summaryRows);
         }
 
         private EntryReportRow toEntryReportRow(EntryKey key, StoredEntry entry) {

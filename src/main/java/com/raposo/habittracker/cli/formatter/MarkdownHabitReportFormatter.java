@@ -19,8 +19,19 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         output.append("- Entries contain only recorded habit entries\n");
         output.append("- Missing entry means no recorded score, not an explicit 0\n");
         output.append("- score 0 is a recorded entry\n");
-        output.append("- average_score = sum(recorded entry scores) / 7, so missing days contribute 0\n\n");
+        output.append("- average_score = sum(recorded entry scores) / days in current range\n");
+        output.append("- Missing days contribute 0 to average_score\n\n");
+        output.append("- Current range: ")
+                .append(report.currentRange().startDate())
+                .append(" to ")
+                .append(report.currentRange().endDate())
+                .append("\n");
 
+        output.append("- Previous range: ")
+                .append(report.previousRange().startDate())
+                .append(" to ")
+                .append(report.previousRange().endDate())
+                .append("\n");
         output.append("Entries:\n");
         output.append("| date | weekday | week_start | habit | score | note |\n");
         output.append("|------|---------|------------|-------|-------|------|\n");
