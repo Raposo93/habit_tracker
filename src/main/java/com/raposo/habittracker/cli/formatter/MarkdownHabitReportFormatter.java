@@ -1,5 +1,7 @@
 package com.raposo.habittracker.cli.formatter;
 
+import java.util.Locale;
+
 import com.raposo.habittracker.application.report.EntryReportRow;
 import com.raposo.habittracker.application.report.HabitReport;
 import com.raposo.habittracker.application.report.HabitSummaryRow;
@@ -15,12 +17,7 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         output.append("- Score scale: ")
                 .append(report.context().scoreScale())
                 .append("\n");
-        output.append("- Week starts on Monday and ends on Sunday\n");
-        output.append("- Entries contain only recorded habit entries\n");
-        output.append("- Missing entry means no recorded score, not an explicit 0\n");
-        output.append("- score 0 is a recorded entry\n");
-        output.append("- average_score = sum(recorded entry scores) / days in current range\n");
-        output.append("- Missing days contribute 0 to average_score\n\n");
+
         output.append("- Current range: ")
                 .append(report.currentRange().startDate())
                 .append(" to ")
@@ -32,6 +29,14 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
                 .append(" to ")
                 .append(report.previousRange().endDate())
                 .append("\n");
+
+        output.append("- Week starts on Monday and ends on Sunday\n");
+        output.append("- Entries contain only recorded habit entries\n");
+        output.append("- Missing entry means no recorded score, not an explicit 0\n");
+        output.append("- score 0 is a recorded entry\n");
+        output.append("- average_score = sum(recorded entry scores) / days in current range\n");
+        output.append("- Missing days contribute 0 to average_score\n\n");
+
         output.append("Entries:\n");
         output.append("| date | weekday | week_start | habit | score | note |\n");
         output.append("|------|---------|------------|-------|-------|------|\n");
@@ -53,18 +58,26 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         }
 
         output.append("\nSummary:\n");
-        output.append("| habit | average_score | recorded_days | missing_days |\n");
-        output.append("|-------|---------------|---------------|--------------|\n");
+        output.append(
+                "| habit | previous_avg | current_avg | delta | trend | current_recorded_days | current_missing_days |\n");
+        output.append(
+                "|-------|--------------|-------------|-------|-------|-----------------------|----------------------|\n");
 
         for (HabitSummaryRow row : report.summary()) {
             output.append("| ")
                     .append(row.habit())
                     .append(" | ")
-                    .append(row.averageScore())
+                    .append(formatScore(row.previousAverageScore()))
                     .append(" | ")
-                    .append(row.recordedDays())
+                    .append(formatScore(row.currentAverageScore()))
                     .append(" | ")
-                    .append(row.missingDays())
+                    .append(formatDelta(row.delta()))
+                    .append(" | ")
+                    .append(formatTrend(row.trend()))
+                    .append(" | ")
+                    .append(row.currentRecordedDays())
+                    .append(" | ")
+                    .append(row.currentMissingDays())
                     .append(" |\n");
         }
 
@@ -72,7 +85,11 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
     }
 
     private String formatDelta(double delta) {
-        return delta > 0 ? "+" + delta : String.valueOf(delta);
+        if (delta > 0) {
+            return "+" + formatScore(delta);
+        }
+
+        return formatScore(delta);
     }
 
     private String formatTrend(Trend trend) {
@@ -93,5 +110,9 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
                 .replace("\n", " ")
                 .replace("|", "\\|")
                 .trim();
+    }
+
+    private String formatScore(double value) {
+        return String.format(Locale.ENGLISH, "%.2f", value);
     }
 }

@@ -8,11 +8,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import com.raposo.habittracker.application.report.EntryReportRow;
 import com.raposo.habittracker.application.report.HabitReport;
 import com.raposo.habittracker.application.report.HabitSummaryRow;
 import com.raposo.habittracker.application.report.ReportContext;
+import com.raposo.habittracker.application.report.Trend;
 import com.raposo.habittracker.domain.DateRange;
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.StoredEntry;
@@ -37,13 +39,16 @@ public class HabitReportBuilder {
                                 .map(entry -> toEntryReportRow(entry.getKey(), entry.getValue()))
                                 .toList();
 
-                List<HabitSummaryRow> summaryRows = buildSummaryRows(currentEntries, currentRange);
-
-                return new HabitReport(context, 
-                        currentRange, 
-                        previousRange,
-                        entryRows,
-                        summaryRows);
+                List<HabitSummaryRow> summaryRows = buildSummaryRows(
+                                currentEntries,
+                                currentRange,
+                                previousEntries,
+                                previousRange);
+                return new HabitReport(context,
+                                currentRange,
+                                previousRange,
+                                entryRows,
+                                summaryRows);
         }
 
         private EntryReportRow toEntryReportRow(EntryKey key, StoredEntry entry) {
@@ -65,41 +70,85 @@ public class HabitReportBuilder {
         }
 
         private List<HabitSummaryRow> buildSummaryRows(
-                        Map<EntryKey, StoredEntry> entries,
-                        DateRange range) {
-                long totalDays = range.daysInclusive();
-
-                return entries.keySet().stream()
+                        Map<EntryKey, StoredEntry> currentEntries,
+                        DateRange currentRange,
+                        Map<EntryKey, StoredEntry> previousEntries,
+                        DateRange previousRange) {
+                return Stream.concat(
+                                currentEntries.keySet().stream(),
+                                previousEntries.keySet().stream())
                                 .map(EntryKey::habit)
                                 .distinct()
                                 .sorted()
-                                .map(habit -> toHabitSummaryRow(habit, entries, totalDays))
+                                .map(habit -> toHabitSummaryRow(
+                                                habit,
+                                                currentEntries,
+                                                currentRange,
+                                                previousEntries,
+                                                previousRange))
                                 .toList();
         }
 
         private HabitSummaryRow toHabitSummaryRow(
                         String habit,
-                        Map<EntryKey, StoredEntry> entries,
-                        long totalDays) {
-                List<StoredEntry> habitEntries = entries.entrySet().stream()
-                                .filter(entry -> entry.getKey().habit().equals(habit))
-                                .map(Map.Entry::getValue)
-                                .toList();
+                        Map<EntryKey, StoredEntry> currentEntries,
+                        DateRange currentRange,
+                        Map<EntryKey, StoredEntry> previousEntries,
+                        DateRange previousRange) {
+                double previousAverageScore = averageScoreForHabit(
+                                habit,
+                                previousEntries,
+                                previousRange);
 
-                double totalScore = habitEntries.stream()
-                                .mapToDouble(StoredEntry::score)
-                                .sum();
+                double currentAverageScore = averageScoreForHabit(
+                                habit,
+                                currentEntries,
+                                currentRange);
 
-                int recordedDays = habitEntries.size();
-                int missingDays = (int) totalDays - recordedDays;
+                double delta = currentAverageScore - previousAverageScore;
 
-                double averageScore = totalScore / totalDays;
+                int currentRecordedDays = recordedDaysForHabit(habit, currentEntries);
+                int currentMissingDays = (int) currentRange.daysInclusive() - currentRecordedDays;
 
                 return new HabitSummaryRow(
                                 habit,
-                                averageScore,
-                                recordedDays,
-                                missingDays);
+                                previousAverageScore,
+                                currentAverageScore,
+                                delta,
+                                trendFrom(delta),
+                                currentRecordedDays,
+                                currentMissingDays);
         }
 
+        private double averageScoreForHabit(
+                        String habit,
+                        Map<EntryKey, StoredEntry> entries,
+                        DateRange range) {
+                double totalScore = entries.entrySet().stream()
+                                .filter(entry -> entry.getKey().habit().equals(habit))
+                                .mapToDouble(entry -> entry.getValue().score())
+                                .sum();
+
+                return totalScore / range.daysInclusive();
+        }
+
+        private int recordedDaysForHabit(
+                        String habit,
+                        Map<EntryKey, StoredEntry> entries) {
+                return (int) entries.keySet().stream()
+                                .filter(key -> key.habit().equals(habit))
+                                .count();
+        }
+
+        private Trend trendFrom(double delta) {
+                if (delta > 0) {
+                        return Trend.IMPROVED;
+                }
+
+                if (delta < 0) {
+                        return Trend.WORSENED;
+                }
+
+                return Trend.STABLE;
+        }
 }
