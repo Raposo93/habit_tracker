@@ -39,7 +39,7 @@ public class GoogleAuth {
                     httpTransport,
                     JSON_FACTORY,
                     getCredentials(httpTransport))
-                    .setApplicationName(config.APPLICATION_NAME)
+                    .setApplicationName(config.applicationName())
                     .build();
 
         } catch (IOException | GeneralSecurityException exception) {
@@ -48,11 +48,11 @@ public class GoogleAuth {
     }
 
     private Credential getCredentials(NetHttpTransport httpTransport) throws IOException {
-        if (!Files.exists(config.CREDENTIALS_PATH)) {
-            throw new IOException(config.CREDENTIALS_PATH + " not found.");
+        if (!Files.exists(config.credentialsPath())) {
+            throw new IOException(config.credentialsPath() + " not found.");
         }
 
-        try (InputStream inputStream = Files.newInputStream(config.CREDENTIALS_PATH)) {
+        try (InputStream inputStream = Files.newInputStream(config.credentialsPath())) {
             GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
                     JSON_FACTORY,
                     new InputStreamReader(inputStream));
@@ -62,7 +62,7 @@ public class GoogleAuth {
                     JSON_FACTORY,
                     clientSecrets,
                     SCOPES)
-                    .setDataStoreFactory(new FileDataStoreFactory(config.TOKENS_DIRECTORY_PATH.toFile()))
+                    .setDataStoreFactory(new FileDataStoreFactory(config.tokensDirectoryPath().toFile()))
                     .setAccessType("offline")
                     .build();
 
