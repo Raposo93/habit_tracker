@@ -3,5 +3,6 @@ package com.raposo.habittracker.application.report;
 public enum Trend {
     IMPROVED,
     WORSENED,
-    STABLE
+    STABLE,
+    NO_BASELINE
 }

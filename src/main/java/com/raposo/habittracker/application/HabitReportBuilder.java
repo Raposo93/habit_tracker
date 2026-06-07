@@ -29,7 +29,7 @@ public class HabitReportBuilder {
                 ReportContext context = new ReportContext(
                                 "0 = bad, 1 = weak, 2 = acceptable, 3 = good",
                                 "Week starts on Monday and ends on Sunday",
-                                "Missing entry means no stored data; summary averages treat it as 0");
+                                "Missing entry means no stored data; period score treats it as 0");
 
                 List<EntryReportRow> entryRows = currentEntries.entrySet().stream()
                                 .sorted(Comparator
@@ -95,32 +95,39 @@ public class HabitReportBuilder {
                         DateRange currentRange,
                         Map<EntryKey, StoredEntry> previousEntries,
                         DateRange previousRange) {
-                double previousAverageScore = averageScoreForHabit(
+                double previousPeriodScore = periodScoreForHabit(
                                 habit,
                                 previousEntries,
                                 previousRange);
 
-                double currentAverageScore = averageScoreForHabit(
+                double currentPeriodScore = periodScoreForHabit(
                                 habit,
                                 currentEntries,
                                 currentRange);
 
-                double delta = currentAverageScore - previousAverageScore;
+                int previousRecordedDays = recordedDaysForHabit(habit, previousEntries);
+                int previousMissingDays = (int) previousRange.daysInclusive() - previousRecordedDays;
 
                 int currentRecordedDays = recordedDaysForHabit(habit, currentEntries);
                 int currentMissingDays = (int) currentRange.daysInclusive() - currentRecordedDays;
 
+                double delta = previousRecordedDays == 0
+                                ? 0
+                                : currentPeriodScore - previousPeriodScore;
+
                 return new HabitSummaryRow(
                                 habit,
-                                previousAverageScore,
-                                currentAverageScore,
+                                previousPeriodScore,
+                                currentPeriodScore,
                                 delta,
-                                trendFrom(delta),
+                                trendFrom(delta, previousRecordedDays),
+                                previousRecordedDays,
+                                previousMissingDays,
                                 currentRecordedDays,
                                 currentMissingDays);
         }
 
-        private double averageScoreForHabit(
+        private double periodScoreForHabit(
                         String habit,
                         Map<EntryKey, StoredEntry> entries,
                         DateRange range) {
@@ -140,7 +147,11 @@ public class HabitReportBuilder {
                                 .count();
         }
 
-        private Trend trendFrom(double delta) {
+        private Trend trendFrom(double delta, int previousRecordedDays) {
+                if (previousRecordedDays == 0) {
+                        return Trend.NO_BASELINE;
+                }
+
                 if (delta > 0) {
                         return Trend.IMPROVED;
                 }

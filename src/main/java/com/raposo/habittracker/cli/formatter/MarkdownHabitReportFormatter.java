@@ -34,8 +34,9 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         output.append("- Entries contain only recorded habit entries\n");
         output.append("- Missing entry means no recorded score, not an explicit 0\n");
         output.append("- score 0 is a recorded entry\n");
-        output.append("- average_score = sum(recorded entry scores) / days in current range\n");
-        output.append("- Missing days contribute 0 to average_score\n\n");
+        output.append("- period_score = sum(recorded entry scores) / days in range\n");
+        output.append("- Missing days contribute 0 to period_score\n");
+        output.append("- trend is N/A when previous range has no recorded data\n\n");
 
         output.append("Entries:\n");
         output.append("| date | weekday | week_start | habit | score | note |\n");
@@ -59,21 +60,25 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
 
         output.append("\nSummary:\n");
         output.append(
-                "| habit | previous_avg | current_avg | delta | trend | current_recorded_days | current_missing_days |\n");
+                "| habit | previous_period_score | current_period_score | delta | trend | previous_recorded_days | previous_missing_days | current_recorded_days | current_missing_days |\n");
         output.append(
-                "|-------|--------------|-------------|-------|-------|-----------------------|----------------------|\n");
+                "|-------|-----------------------|----------------------|-------|-------|------------------------|-----------------------|-----------------------|----------------------|\n");
 
         for (HabitSummaryRow row : report.summary()) {
             output.append("| ")
                     .append(row.habit())
                     .append(" | ")
-                    .append(formatScore(row.previousAverageScore()))
+                    .append(formatPreviousPeriodScore(row))
                     .append(" | ")
-                    .append(formatScore(row.currentAverageScore()))
+                    .append(formatScore(row.currentPeriodScore()))
                     .append(" | ")
-                    .append(formatDelta(row.delta()))
+                    .append(formatDelta(row))
                     .append(" | ")
                     .append(formatTrend(row.trend()))
+                    .append(" | ")
+                    .append(row.previousRecordedDays())
+                    .append(" | ")
+                    .append(row.previousMissingDays())
                     .append(" | ")
                     .append(row.currentRecordedDays())
                     .append(" | ")
@@ -97,6 +102,7 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
             case IMPROVED -> "↑ improved";
             case WORSENED -> "↓ worsened";
             case STABLE -> "→ stable";
+            case NO_BASELINE -> "∅ no baseline";
         };
     }
 
@@ -114,5 +120,21 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
 
     private String formatScore(double value) {
         return String.format(Locale.ENGLISH, "%.2f", value);
+    }
+
+    private String formatPreviousPeriodScore(HabitSummaryRow row) {
+        if (row.previousRecordedDays() == 0) {
+            return "N/A";
+        }
+
+        return formatScore(row.previousPeriodScore());
+    }
+
+    private String formatDelta(HabitSummaryRow row) {
+        if (row.previousRecordedDays() == 0) {
+            return "N/A";
+        }
+
+        return formatDelta(row.delta());
     }
 }
