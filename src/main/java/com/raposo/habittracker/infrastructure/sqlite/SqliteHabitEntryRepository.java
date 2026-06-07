@@ -163,7 +163,7 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
             throw new IllegalStateException("Failed to create database directory", exception);
         }
 
-        String sql = """
+        String sqlHabitEntries = """
                 CREATE TABLE IF NOT EXISTS habit_entries (
                     date TEXT NOT NULL,
                     habit TEXT NOT NULL,
@@ -173,14 +173,23 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
                 )
                 """;
 
+        String sqlHabits = """
+                CREATE TABLE IF NOT EXISTS habits (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL UNIQUE,
+                    cadence TEXT NOT NULL CHECK (cadence IN ('DAILY', 'WEEKLY')),
+                    active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1))
+                )
+                """;
+
         try (
                 Connection connection = connect();
                 Statement statement = connection.createStatement()) {
 
-            statement.execute(sql);
-
+            statement.execute(sqlHabitEntries);
+            statement.execute(sqlHabits);
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to create habit_entries table", exception);
+            throw new IllegalStateException("Failed to create tables", exception);
         }
     }
 
