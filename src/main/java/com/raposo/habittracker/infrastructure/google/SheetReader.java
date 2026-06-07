@@ -17,8 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SheetReader implements HabitEntryReader {
-    private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    private static final String HABIT_NAMES_RANGE = "C1:1";
+    private static final String WEEK_DATES_RANGE = "B2:B8";
+    private static final int FIRST_HABIT_COLUMN = 3;
+    private static final int FIRST_WEEK_DATA_ROW = 2;
+    private static final int LAST_WEEK_DATA_ROW = 8;
 
     private final Sheets sheetsService;
     private final String spreadsheetId;
@@ -50,7 +55,7 @@ public class SheetReader implements HabitEntryReader {
     private List<String> readHabitNames() throws IOException {
         ValueRange response = sheetsService.spreadsheets()
                 .values()
-                .get(spreadsheetId, "C1:1")
+                .get(spreadsheetId, HABIT_NAMES_RANGE)
                 .execute();
 
         List<List<Object>> rows = response.getValues();
@@ -68,7 +73,7 @@ public class SheetReader implements HabitEntryReader {
     private List<String> readWeekDates() throws IOException {
         ValueRange response = sheetsService.spreadsheets()
                 .values()
-                .get(spreadsheetId, "B2:B8")
+                .get(spreadsheetId, WEEK_DATES_RANGE)
                 .execute();
 
         List<List<Object>> rows = response.getValues();
@@ -91,8 +96,7 @@ public class SheetReader implements HabitEntryReader {
     }
 
     private List<SheetCell> readWeeklyData(int habitCount) throws IOException {
-        String endColumn = columnName(3 + habitCount - 1);
-        String rangeToRead = "C2:" + endColumn + "8";
+        String rangeToRead = weeklyDataRange(habitCount);
 
         Spreadsheet response = sheetsService.spreadsheets()
                 .get(spreadsheetId)
@@ -203,5 +207,15 @@ public class SheetReader implements HabitEntryReader {
             int columnIndex,
             String value,
             String note) {
+    }
+
+    private static String weeklyDataRange(int habitCount) {
+        String endColumn = columnName(FIRST_HABIT_COLUMN + habitCount - 1);
+
+        return columnName(FIRST_HABIT_COLUMN)
+                + FIRST_WEEK_DATA_ROW
+                + ":"
+                + endColumn
+                + LAST_WEEK_DATA_ROW;
     }
 }
