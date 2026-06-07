@@ -56,9 +56,10 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
             LocalDate endDate) {
 
         String sql = """
-                SELECT date, habit, score, note
-                FROM habit_entries
-                WHERE date BETWEEN ? AND ?
+                SELECT e.date, h.name AS habit, e.score, e.note
+                FROM habit_entries e
+                JOIN habits h ON h.id = e.habit_id
+                WHERE e.date BETWEEN ? AND ?
                 """;
 
         Map<EntryKey, StoredEntry> entries = new HashMap<>();
@@ -97,8 +98,8 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
         }
 
         String sql = """
-                INSERT INTO habit_entries (date, habit, score, note)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO habit_entries (date, habit_id, score, note)
+                VALUES (?, (SELECT id FROM habits WHERE name = ?), ?, ?)
                 """;
 
         try (
@@ -129,7 +130,8 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
         String sql = """
                 UPDATE habit_entries
                 SET score = ?, note = ?
-                WHERE date = ? AND habit = ?
+                WHERE date = ?
+                  AND habit_id = (SELECT id FROM habits WHERE name = ?)
                 """;
 
         try (
@@ -166,10 +168,11 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
         String sqlHabitEntries = """
                 CREATE TABLE IF NOT EXISTS habit_entries (
                     date TEXT NOT NULL,
-                    habit TEXT NOT NULL,
+                    habit_id TEXT NOT NULL,
                     score REAL NOT NULL,
                     note TEXT,
-                    PRIMARY KEY (date, habit)
+                    PRIMARY KEY (date, habit_id),
+                    FOREIGN KEY (habit_id) REFERENCES habits(id)
                 )
                 """;
 
@@ -186,14 +189,20 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
                 Connection connection = connect();
                 Statement statement = connection.createStatement()) {
 
-            statement.execute(sqlHabitEntries);
             statement.execute(sqlHabits);
+            statement.execute(sqlHabitEntries);
         } catch (SQLException exception) {
             throw new IllegalStateException("Failed to create tables", exception);
         }
     }
 
     private Connection connect() throws SQLException {
-        return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        Connection connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("PRAGMA foreign_keys = ON");
+        }
+
+        return connection;
     }
 }
