@@ -70,20 +70,18 @@ public class ImportEntriesUseCase {
                 continue;
             }
 
-            if (latestEntryDate.isPresent()) {
+            if (shouldSkipNewEntryOlderThanLatestStoredDate(entry, latestEntryDate)) {
                 LocalDate latestDate = latestEntryDate.get();
 
-                if (entry.entryDate().isBefore(latestDate)) {
-                    logger.info(
-                            "Skipped older entry: "
-                                    + entry.entryDate()
-                                    + " < "
-                                    + latestDate
-                                    + " ("
-                                    + entry.habit()
-                                    + ")");
-                    continue;
-                }
+                logger.info(
+                        "Skipped older entry: "
+                                + entry.entryDate()
+                                + " < "
+                                + latestDate
+                                + " ("
+                                + entry.habit()
+                                + ")");
+                continue;
             }
 
             entriesToInsert.add(entry);
@@ -104,5 +102,12 @@ public class ImportEntriesUseCase {
                         + " inserted, "
                         + entriesToUpdate.size()
                         + " updated");
+    }
+
+    private boolean shouldSkipNewEntryOlderThanLatestStoredDate(
+            HabitEntry entry,
+            Optional<LocalDate> latestEntryDate) {
+        return latestEntryDate.isPresent()
+                && entry.entryDate().isBefore(latestEntryDate.get());
     }
 }
