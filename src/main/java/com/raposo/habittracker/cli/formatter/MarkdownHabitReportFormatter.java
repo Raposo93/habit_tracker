@@ -1,8 +1,8 @@
 package com.raposo.habittracker.cli.formatter;
 
+import java.util.List;
 import java.util.Locale;
 
-import com.raposo.habittracker.application.report.EntryReportRow;
 import com.raposo.habittracker.application.report.HabitReport;
 import com.raposo.habittracker.application.report.HabitSummaryRow;
 import com.raposo.habittracker.application.report.Trend;
@@ -39,52 +39,10 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         output.append("- trend is N/A when previous range has no recorded data\n\n");
 
         output.append("Entries:\n");
-        output.append("| date | weekday | week_start | habit | score | note |\n");
-        output.append("|------|---------|------------|-------|-------|------|\n");
-
-        for (EntryReportRow row : report.entries()) {
-            output.append("| ")
-                    .append(row.date())
-                    .append(" | ")
-                    .append(row.weekday())
-                    .append(" | ")
-                    .append(row.weekStart())
-                    .append(" | ")
-                    .append(row.habit())
-                    .append(" | ")
-                    .append(row.score())
-                    .append(" | ")
-                    .append(formatCell(row.note()))
-                    .append(" |\n");
-        }
+        output.append(formatEntriesTable(report));
 
         output.append("\nSummary:\n");
-        output.append(
-                "| habit | previous_period_score | current_period_score | delta | trend | previous_recorded_days | previous_missing_days | current_recorded_days | current_missing_days |\n");
-        output.append(
-                "|-------|-----------------------|----------------------|-------|-------|------------------------|-----------------------|-----------------------|----------------------|\n");
-
-        for (HabitSummaryRow row : report.summary()) {
-            output.append("| ")
-                    .append(row.habit())
-                    .append(" | ")
-                    .append(formatPreviousPeriodScore(row))
-                    .append(" | ")
-                    .append(formatScore(row.currentPeriodScore()))
-                    .append(" | ")
-                    .append(formatDelta(row))
-                    .append(" | ")
-                    .append(formatTrend(row.trend()))
-                    .append(" | ")
-                    .append(row.previousRecordedDays())
-                    .append(" | ")
-                    .append(row.previousMissingDays())
-                    .append(" | ")
-                    .append(row.currentRecordedDays())
-                    .append(" | ")
-                    .append(row.currentMissingDays())
-                    .append(" |\n");
-        }
+        output.append(formatSummaryTable(report));
 
         return output.toString();
     }
@@ -106,18 +64,6 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         };
     }
 
-    private String formatCell(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return value
-                .replace("\r", " ")
-                .replace("\n", " ")
-                .replace("|", "\\|")
-                .trim();
-    }
-
     private String formatScore(double value) {
         return String.format(Locale.ENGLISH, "%.2f", value);
     }
@@ -136,5 +82,49 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         }
 
         return formatDelta(row.delta());
+    }
+
+    private String formatEntriesTable(HabitReport report) {
+        List<List<String>> rows = report.entries().stream()
+                .map(row -> List.of(
+                        row.date().toString(),
+                        row.weekday(),
+                        row.weekStart().toString(),
+                        row.habit(),
+                        formatScore(row.score()),
+                        row.note()))
+                .toList();
+
+        return MarkdownTable.render(
+                List.of("date", "weekday", "week_start", "habit", "score", "note"),
+                rows);
+    }
+
+    private String formatSummaryTable(HabitReport report) {
+        List<List<String>> rows = report.summary().stream()
+                .map(row -> List.of(
+                        row.habit(),
+                        formatPreviousPeriodScore(row),
+                        formatScore(row.currentPeriodScore()),
+                        formatDelta(row),
+                        formatTrend(row.trend()),
+                        String.valueOf(row.previousRecordedDays()),
+                        String.valueOf(row.previousMissingDays()),
+                        String.valueOf(row.currentRecordedDays()),
+                        String.valueOf(row.currentMissingDays())))
+                .toList();
+
+        return MarkdownTable.render(
+                List.of(
+                        "habit",
+                        "previous_score",
+                        "current_score",
+                        "delta",
+                        "trend",
+                        "prev_recorded",
+                        "prev_missing",
+                        "curr_recorded",
+                        "curr_missing"),
+                rows);
     }
 }
