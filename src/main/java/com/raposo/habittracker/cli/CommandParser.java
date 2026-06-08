@@ -3,6 +3,7 @@ package com.raposo.habittracker.cli;
 import com.raposo.habittracker.application.GetHabitReportBetweenDatesUseCase;
 import com.raposo.habittracker.application.ImportEntriesUseCase;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.application.port.HabitRepository;
 import com.raposo.habittracker.cli.formatter.HabitReportFormatter;
 import com.raposo.habittracker.cli.formatter.MarkdownHabitReportFormatter;
 import com.raposo.habittracker.config.Config;
@@ -14,7 +15,8 @@ public class CommandParser {
     public static Command parse(
             String[] args,
             Config config,
-            HabitEntryRepository repository) {
+            HabitEntryRepository entryRepository,
+            HabitRepository habitRepository) {
         if (args.length == 0) {
             return new HelpCommand();
         }
@@ -26,7 +28,10 @@ public class CommandParser {
                 SheetReader reader = new SheetReader(
                         auth.createSheetsService(),
                         config.spreadsheetId());
-                ImportEntriesUseCase importEntries = new ImportEntriesUseCase(reader, repository);
+                ImportEntriesUseCase importEntries = new ImportEntriesUseCase(
+                        reader,
+                        entryRepository,
+                        habitRepository);
 
                 yield new ImportCommand(importEntries);
             }
@@ -38,7 +43,7 @@ public class CommandParser {
 
                 DateRange range = DateRange.between(args[1], args[2]);
 
-                GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(repository);
+                GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(entryRepository);
 
                 HabitReportFormatter formatter = new MarkdownHabitReportFormatter();
 
@@ -46,7 +51,7 @@ public class CommandParser {
             }
 
             case "--query-last-week" -> {
-                GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(repository);
+                GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(entryRepository);
 
                 HabitReportFormatter formatter = new MarkdownHabitReportFormatter();
 

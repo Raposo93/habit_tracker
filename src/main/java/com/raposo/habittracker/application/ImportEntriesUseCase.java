@@ -6,11 +6,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Logger;
 
 import com.raposo.habittracker.application.port.HabitEntryReader;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.application.port.HabitRepository;
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.HabitEntry;
 import com.raposo.habittracker.domain.StoredEntry;
@@ -19,11 +21,16 @@ public class ImportEntriesUseCase {
     private static final Logger logger = Logger.getLogger(ImportEntriesUseCase.class.getName());
 
     private final HabitEntryReader reader;
-    private final HabitEntryRepository repository;
+    private final HabitEntryRepository entryRepository;
+    private final HabitRepository habitRepository;
 
-    public ImportEntriesUseCase(HabitEntryReader reader, HabitEntryRepository repository) {
-        this.reader = reader;
-        this.repository = repository;
+    public ImportEntriesUseCase(
+            HabitEntryReader reader,
+            HabitEntryRepository entryRepository,
+            HabitRepository habitRepository) {
+        this.reader = Objects.requireNonNull(reader);
+        this.entryRepository = Objects.requireNonNull(entryRepository);
+        this.habitRepository = Objects.requireNonNull(habitRepository);
     }
 
     public void execute() {
@@ -34,6 +41,8 @@ public class ImportEntriesUseCase {
             return;
         }
 
+        validateKnownHabits(entries);
+
         List<HabitEntry> sortedEntries = entries.stream()
                 .sorted(Comparator
                         .comparing(HabitEntry::entryDate)
@@ -43,10 +52,10 @@ public class ImportEntriesUseCase {
         LocalDate startDate = sortedEntries.getFirst().entryDate();
         LocalDate endDate = sortedEntries.getLast().entryDate();
 
-        Optional<LocalDate> latestEntryDate = repository.findLatestEntryDate();
+        Optional<LocalDate> latestEntryDate = entryRepository.findLatestEntryDate();
 
         Map<EntryKey, StoredEntry> existingEntries = new HashMap<>(
-                repository.findEntriesBetweenDates(startDate, endDate));
+                entryRepository.findEntriesBetweenDates(startDate, endDate));
 
         List<HabitEntry> entriesToInsert = new ArrayList<>();
         List<HabitEntry> entriesToUpdate = new ArrayList<>();
@@ -89,11 +98,11 @@ public class ImportEntriesUseCase {
         }
 
         if (!entriesToInsert.isEmpty()) {
-            repository.insertEntries(entriesToInsert);
+            entryRepository.insertEntries(entriesToInsert);
         }
 
         if (!entriesToUpdate.isEmpty()) {
-            repository.updateEntries(entriesToUpdate);
+            entryRepository.updateEntries(entriesToUpdate);
         }
 
         logger.info(
@@ -109,5 +118,18 @@ public class ImportEntriesUseCase {
             Optional<LocalDate> latestEntryDate) {
         return latestEntryDate.isPresent()
                 && entry.entryDate().isBefore(latestEntryDate.get());
+    }
+
+    private void validateKnownHabits(List<HabitEntry> entries) {
+        entries.stream()
+                .map(HabitEntry::habit)
+                .distinct()
+                .sorted(Comparator.naturalOrder())
+                .filter(habit -> habitRepository.findByExactName(habit).isEmpty())
+                .findFirst()
+                .ifPresent(habit -> {
+                    throw new IllegalArgumentException(
+                            "Unknown habit from Sheets: " + habit);
+                });
     }
 }

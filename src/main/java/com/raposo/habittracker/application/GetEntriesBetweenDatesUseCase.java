@@ -11,8 +11,8 @@ public class GetEntriesBetweenDatesUseCase {
 
     private final HabitEntryRepository repository;
 
-    public GetEntriesBetweenDatesUseCase(HabitEntryRepository repository) {
-        this.repository = repository;
+    public GetEntriesBetweenDatesUseCase(HabitEntryRepository entryRepository) {
+        this.repository = entryRepository;
     }
 
     public Map<EntryKey, StoredEntry> execute(DateRange range) {

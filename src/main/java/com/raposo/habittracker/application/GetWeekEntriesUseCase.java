@@ -12,8 +12,8 @@ public class GetWeekEntriesUseCase {
 
     private final HabitEntryRepository repository;
 
-    public GetWeekEntriesUseCase(HabitEntryRepository repository) {
-        this.repository = repository;
+    public GetWeekEntriesUseCase(HabitEntryRepository entryRepository) {
+        this.repository = entryRepository;
     }
 
     public Map<EntryKey, StoredEntry> execute(LocalDate referenceDate) {

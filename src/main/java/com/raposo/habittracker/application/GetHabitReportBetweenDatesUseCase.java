@@ -13,8 +13,8 @@ public class GetHabitReportBetweenDatesUseCase {
     private final HabitEntryRepository repository;
     private final HabitReportBuilder reportBuilder;
 
-    public GetHabitReportBetweenDatesUseCase(HabitEntryRepository repository) {
-        this.repository = repository;
+    public GetHabitReportBetweenDatesUseCase(HabitEntryRepository entryRepository) {
+        this.repository = entryRepository;
         this.reportBuilder = new HabitReportBuilder();
     }
 
