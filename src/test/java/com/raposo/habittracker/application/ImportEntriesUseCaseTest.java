@@ -12,7 +12,6 @@ import com.raposo.habittracker.domain.HabitEntry;
 import com.raposo.habittracker.domain.HabitId;
 import com.raposo.habittracker.domain.StoredEntry;
 import java.util.Optional;
-
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -146,6 +145,35 @@ class ImportEntriesUseCaseTest {
                 exception.getMessage());
 
         assertEquals(0, repository.size());
+    }
+
+    @Test
+    void givenTwoKnownHabitsOnSameDateWhenExecuteThenRepositoryContainsBothEntries() {
+        HabitEntry sleep = entry("2026-06-08", "Sleep", 2.0, "");
+        HabitEntry exercise = entry("2026-06-08", "Exercise", 3.0, "");
+
+        InMemoryHabitEntryRepository repository = new InMemoryHabitEntryRepository();
+
+        ImportEntriesUseCase useCase = createUseCase(
+                List.of(sleep, exercise),
+                repository,
+                List.of("Sleep", "Exercise"));
+
+        useCase.execute();
+
+        assertEquals(2, repository.size());
+        assertEquals(new StoredEntry(2.0, ""), repository.get(sleep));
+        assertEquals(new StoredEntry(3.0, ""), repository.get(exercise));
+    }
+
+    private static ImportEntriesUseCase createUseCase(
+            List<HabitEntry> entries,
+            InMemoryHabitEntryRepository repository,
+            List<String> knownHabits) {
+        return new ImportEntriesUseCase(
+                new FakeHabitEntryReader(entries),
+                repository,
+                new InMemoryHabitRepository(knownHabits));
     }
 
     private static HabitEntry entry(String date, String habit, double score, String note) {
