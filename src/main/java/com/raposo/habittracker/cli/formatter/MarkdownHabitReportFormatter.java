@@ -34,9 +34,10 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         output.append("- Entries contain only recorded habit entries\n");
         output.append("- Missing entry means no recorded score, not an explicit 0\n");
         output.append("- score 0 is a recorded entry\n");
-        output.append("- period_score = sum(recorded entry scores) / days in range\n");
-        output.append("- Missing days contribute 0 to period_score\n");
-        output.append("- trend is N/A when previous range has no recorded data\n\n");
+        output.append("- period_score = sum(recorded entry scores) / evaluable days in range\n");
+        output.append("- Days before tracking started are ignored\n");
+        output.append("- Missing days after tracking started contribute 0 to period_score\n");
+        output.append("- trend is N/A when previous range has no evaluable baseline\n\n");
 
         output.append("Entries:\n");
         output.append(formatEntriesTable(report));
@@ -69,7 +70,7 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
     }
 
     private String formatPreviousPeriodScore(HabitSummaryRow row) {
-        if (row.previousRecordedDays() == 0) {
+        if (row.trend() == Trend.NO_BASELINE) {
             return "N/A";
         }
 
@@ -77,7 +78,7 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
     }
 
     private String formatDelta(HabitSummaryRow row) {
-        if (row.previousRecordedDays() == 0) {
+        if (row.trend() == Trend.NO_BASELINE) {
             return "N/A";
         }
 
