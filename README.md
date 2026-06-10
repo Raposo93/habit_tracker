@@ -4,7 +4,7 @@ Small CLI habit tracker that imports entries from Google Sheets into SQLite and 
 
 ## Current status
 
-Version 0.2 focuses on stable habit identity.
+Version 0.2.1 fixes report baseline semantics before expanding the UI or API surface.
 
 The CLI can:
 
@@ -15,7 +15,9 @@ The CLI can:
 * query last week
 * query a custom date range
 * compare the current range with the previous equivalent range
+* ignore days before tracking started when calculating report baselines
 * show summary, delta and trend per habit
+
 
 ## Requirements
 
@@ -88,11 +90,22 @@ The report includes:
 
 Missing data means no entry was recorded. It is not the same as an explicit `0` score.
 
-For period scores, missing days contribute `0` because the score is calculated as:
+For period scores, only evaluable days are included in the denominator:
 
 ```text
-period_score = sum(recorded entry scores) / days in range
+period_score = sum(recorded entry scores) / evaluable days in range
 ```
+
+An evaluable day is any day on or after the first stored habit entry date.
+
+Report baseline rules:
+
+* days before tracking started are ignored
+* missing days after tracking started contribute `0` to `period_score`
+* missing days before tracking started do not exist for report scoring
+* if the previous range has no evaluable days, the trend is `NO_BASELINE`
+* if the previous range has evaluable days but no recorded entries, the previous score is `0`
+
 
 ## Habit identity
 
