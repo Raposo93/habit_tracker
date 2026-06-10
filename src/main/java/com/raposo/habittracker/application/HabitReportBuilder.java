@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.raposo.habittracker.application.report.EntryReportRow;
@@ -25,7 +26,8 @@ public class HabitReportBuilder {
                         Map<EntryKey, StoredEntry> currentEntries,
                         DateRange currentRange,
                         Map<EntryKey, StoredEntry> previousEntries,
-                        DateRange previousRange) {
+                        DateRange previousRange,
+                        Optional<LocalDate> trackingStartDate) {
                 ReportContext context = new ReportContext(
                                 "0 = bad, 1 = weak, 2 = acceptable, 3 = good",
                                 "Week starts on Monday and ends on Sunday",

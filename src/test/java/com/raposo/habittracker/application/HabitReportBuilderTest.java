@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,8 @@ class HabitReportBuilderTest {
                 currentEntries,
                 currentRange,
                 Map.of(),
-                previousRange);
+                previousRange,
+                noTrackingStartDate());
 
         HabitSummaryRow row = summaryRowFor(report, "Sleep");
 
@@ -65,7 +67,8 @@ class HabitReportBuilderTest {
                 currentEntries,
                 currentRange,
                 previousEntries,
-                previousRange);
+                previousRange,
+                noTrackingStartDate());
 
         HabitSummaryRow row = summaryRowFor(report, "Exercise");
 
@@ -88,7 +91,8 @@ class HabitReportBuilderTest {
                 Map.of(key("Reading", 2026, 5, 25), entry(3.0)),
                 currentRange,
                 Map.of(key("Reading", 2026, 5, 18), entry(1.0)),
-                previousRange);
+                previousRange,
+                noTrackingStartDate());
 
         HabitSummaryRow row = summaryRowFor(report, "Reading");
 
@@ -105,7 +109,8 @@ class HabitReportBuilderTest {
                 Map.of(key("Reading", 2026, 5, 25), entry(1.0)),
                 currentRange,
                 Map.of(key("Reading", 2026, 5, 18), entry(3.0)),
-                previousRange);
+                previousRange,
+                noTrackingStartDate());
 
         HabitSummaryRow row = summaryRowFor(report, "Reading");
 
@@ -122,7 +127,8 @@ class HabitReportBuilderTest {
                 Map.of(),
                 currentRange,
                 Map.of(key("Old habit", 2026, 5, 18), entry(3.0)),
-                previousRange);
+                previousRange,
+                noTrackingStartDate());
 
         HabitSummaryRow row = summaryRowFor(report, "Old habit");
 
@@ -155,5 +161,9 @@ class HabitReportBuilderTest {
 
     private static StoredEntry entry(double score) {
         return new StoredEntry(score, "");
+    }
+
+    private static Optional<LocalDate> noTrackingStartDate() {
+        return Optional.empty();
     }
 }
