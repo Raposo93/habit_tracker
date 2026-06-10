@@ -233,6 +233,13 @@ class ImportEntriesUseCaseTest {
                 saveExisting(entry);
             }
         }
+
+        @Override
+        public Optional<LocalDate> findEarliestEntryDate() {
+            return entries.keySet().stream()
+                    .map(EntryKey::entryDate)
+                    .min(LocalDate::compareTo);
+        }
     }
 
     private static ImportEntriesUseCase createUseCase(

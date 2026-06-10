@@ -205,4 +205,27 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
 
         return connection;
     }
+
+    @Override
+    public Optional<LocalDate> findEarliestEntryDate() {
+        String sql = """
+                SELECT MIN(date) FROM habit_entries
+                """;
+
+        try (
+                Connection connection = connect();
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql)) {
+
+            String value = resultSet.getString(1);
+
+            if (value == null) {
+                return Optional.empty();
+            }
+
+            return Optional.of(LocalDate.parse(value));
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to find earliest entry date", exception);
+        }
+    }
 }

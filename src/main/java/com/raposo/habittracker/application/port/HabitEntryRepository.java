@@ -19,4 +19,6 @@ public interface HabitEntryRepository {
     void insertEntries(List<HabitEntry> entries);
 
     void updateEntries(List<HabitEntry> entries);
+
+    Optional<LocalDate> findEarliestEntryDate();
 }

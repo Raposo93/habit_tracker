@@ -68,5 +68,10 @@ class GetHabitReportBetweenDatesUseCaseTest {
         List<DateRange> queriedRanges() {
             return queriedRanges;
         }
+
+        @Override
+        public Optional<LocalDate> findEarliestEntryDate() {
+            return Optional.empty();
+        }
     }
 }
