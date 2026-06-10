@@ -70,14 +70,18 @@ The report includes:
 
 * context
 * current range
-* previous range
-* entries
-* summary
-* period score
+* previous equivalent range
+* recorded entries for the current range
+* summary per habit
+* previous period score
+* current period score
 * recorded days
-* missing days
+* missing evaluable days
 * delta
 * trend
+
+The previous range is still shown as the full equivalent date range. However, report scoring ignores any previous-range days before tracking started.
+
 
 ## Score scale
 
@@ -144,7 +148,7 @@ Do not manually rename habit names in Google Sheets yet.
 
 Internally, entries are already stored by `habit_id`, but habit creation, renaming, deactivation and ordering are not exposed through the CLI yet.
 
-Stable habit identity is implemented, but full habit management is intentionally outside version 0.2.
+Stable habit identity is implemented, but full habit management is intentionally outside version 0.2.x
 
 ## Roadmap
 
