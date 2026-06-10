@@ -143,6 +143,47 @@ class HabitReportBuilderTest {
         assertEquals(7, row.currentMissingDays());
     }
 
+    @Test
+    void givenPreviousRangeBeforeTrackingStartWhenBuildThenIgnoreDaysBeforeTrackingStart() {
+        DateRange currentRange = weekStarting(2026, 5, 25);
+        DateRange previousRange = weekStarting(2026, 5, 18);
+
+        HabitReport report = builder.build(
+                Map.of(key("Sleep", 2026, 5, 25), entry(3.0)),
+                currentRange,
+                Map.of(key("Sleep", 2026, 5, 22), entry(3.0)),
+                previousRange,
+                Optional.of(LocalDate.of(2026, 5, 22)));
+
+        HabitSummaryRow row = summaryRowFor(report, "Sleep");
+
+        assertEquals(1.0, row.previousPeriodScore(), ASSERTION_DELTA);
+        assertEquals(1, row.previousRecordedDays());
+        assertEquals(2, row.previousMissingDays());
+    }
+
+    @Test
+    void givenPreviousRangeAfterTrackingStartWithoutEntriesWhenBuildThenUseZeroBaseline() {
+        DateRange currentRange = weekStarting(2026, 5, 25);
+        DateRange previousRange = weekStarting(2026, 5, 18);
+
+        HabitReport report = builder.build(
+                Map.of(key("Sleep", 2026, 5, 25), entry(3.0)),
+                currentRange,
+                Map.of(),
+                previousRange,
+                Optional.of(LocalDate.of(2026, 5, 18)));
+
+        HabitSummaryRow row = summaryRowFor(report, "Sleep");
+
+        assertEquals(0.0, row.previousPeriodScore(), ASSERTION_DELTA);
+        assertEquals(3.0 / 7.0, row.currentPeriodScore(), ASSERTION_DELTA);
+        assertEquals(3.0 / 7.0, row.delta(), ASSERTION_DELTA);
+        assertEquals(Trend.IMPROVED, row.trend());
+        assertEquals(0, row.previousRecordedDays());
+        assertEquals(7, row.previousMissingDays());
+    }
+
     private static HabitSummaryRow summaryRowFor(HabitReport report, String habit) {
         return report.summary().stream()
                 .filter(row -> row.habit().equals(habit))

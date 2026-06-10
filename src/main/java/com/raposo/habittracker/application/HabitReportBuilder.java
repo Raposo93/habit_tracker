@@ -45,7 +45,8 @@ public class HabitReportBuilder {
                                 currentEntries,
                                 currentRange,
                                 previousEntries,
-                                previousRange);
+                                previousRange,
+                                trackingStartDate);
                 return new HabitReport(context,
                                 currentRange,
                                 previousRange,
@@ -75,7 +76,8 @@ public class HabitReportBuilder {
                         Map<EntryKey, StoredEntry> currentEntries,
                         DateRange currentRange,
                         Map<EntryKey, StoredEntry> previousEntries,
-                        DateRange previousRange) {
+                        DateRange previousRange,
+                        Optional<LocalDate> trackingStartDate) {
                 return Stream.concat(
                                 currentEntries.keySet().stream(),
                                 previousEntries.keySet().stream())
@@ -87,7 +89,8 @@ public class HabitReportBuilder {
                                                 currentEntries,
                                                 currentRange,
                                                 previousEntries,
-                                                previousRange))
+                                                previousRange,
+                                                trackingStartDate))
                                 .toList();
         }
 
@@ -96,33 +99,50 @@ public class HabitReportBuilder {
                         Map<EntryKey, StoredEntry> currentEntries,
                         DateRange currentRange,
                         Map<EntryKey, StoredEntry> previousEntries,
-                        DateRange previousRange) {
+                        DateRange previousRange,
+                        Optional<LocalDate> trackingStartDate) {
+
+                int previousEvaluableDays = evaluableDays(previousRange, trackingStartDate);
+                int currentEvaluableDays = evaluableDays(currentRange, trackingStartDate);
+
                 double previousPeriodScore = periodScoreForHabit(
                                 habit,
                                 previousEntries,
-                                previousRange);
+                                trackingStartDate,
+                                previousEvaluableDays);
 
                 double currentPeriodScore = periodScoreForHabit(
                                 habit,
                                 currentEntries,
-                                currentRange);
+                                trackingStartDate,
+                                currentEvaluableDays);
 
-                int previousRecordedDays = recordedDaysForHabit(habit, previousEntries);
-                int previousMissingDays = (int) previousRange.daysInclusive() - previousRecordedDays;
+                int previousRecordedDays = recordedDaysForHabit(
+                                habit,
+                                previousEntries,
+                                trackingStartDate);
+                int previousMissingDays = previousEvaluableDays - previousRecordedDays;
 
-                int currentRecordedDays = recordedDaysForHabit(habit, currentEntries);
-                int currentMissingDays = (int) currentRange.daysInclusive() - currentRecordedDays;
+                int currentRecordedDays = recordedDaysForHabit(
+                                habit,
+                                currentEntries,
+                                trackingStartDate);
+                int currentMissingDays = currentEvaluableDays - currentRecordedDays;
 
-                double delta = previousRecordedDays == 0
-                                ? 0
-                                : currentPeriodScore - previousPeriodScore;
+                boolean hasBaseline = trackingStartDate
+                                .map(startDate -> previousEvaluableDays > 0)
+                                .orElse(previousRecordedDays > 0);
+
+                double delta = hasBaseline
+                                ? currentPeriodScore - previousPeriodScore
+                                : 0;
 
                 return new HabitSummaryRow(
                                 habit,
                                 previousPeriodScore,
                                 currentPeriodScore,
                                 delta,
-                                trendFrom(delta, previousRecordedDays),
+                                trendFrom(delta, hasBaseline),
                                 previousRecordedDays,
                                 previousMissingDays,
                                 currentRecordedDays,
@@ -132,25 +152,34 @@ public class HabitReportBuilder {
         private double periodScoreForHabit(
                         String habit,
                         Map<EntryKey, StoredEntry> entries,
-                        DateRange range) {
+                        Optional<LocalDate> trackingStartDate,
+                        int evaluableDays) {
+                if (evaluableDays == 0) {
+                        return 0;
+                }
+
                 double totalScore = entries.entrySet().stream()
                                 .filter(entry -> entry.getKey().habit().equals(habit))
+                                .filter(entry -> isEvaluableDate(entry.getKey().entryDate(), trackingStartDate))
                                 .mapToDouble(entry -> entry.getValue().score())
                                 .sum();
 
-                return totalScore / range.daysInclusive();
+                return totalScore / evaluableDays;
         }
 
         private int recordedDaysForHabit(
                         String habit,
-                        Map<EntryKey, StoredEntry> entries) {
+                        Map<EntryKey, StoredEntry> entries,
+                        Optional<LocalDate> trackingStartDate) {
+
                 return (int) entries.keySet().stream()
                                 .filter(key -> key.habit().equals(habit))
+                                .filter(key -> isEvaluableDate(key.entryDate(), trackingStartDate))
                                 .count();
         }
 
-        private Trend trendFrom(double delta, int previousRecordedDays) {
-                if (previousRecordedDays == 0) {
+        private Trend trendFrom(double delta, boolean hasBaseline) {
+                if (!hasBaseline) {
                         return Trend.NO_BASELINE;
                 }
 
@@ -163,5 +192,30 @@ public class HabitReportBuilder {
                 }
 
                 return Trend.STABLE;
+        }
+
+        private int evaluableDays(
+                        DateRange range,
+                        Optional<LocalDate> trackingStartDate) {
+
+                LocalDate effectiveStartDate = trackingStartDate
+                                .filter(startDate -> startDate.isAfter(range.startDate()))
+                                .orElse(range.startDate());
+
+                if (effectiveStartDate.isAfter(range.endDate())) {
+                        return 0;
+                }
+
+                return (int) DateRange.of(effectiveStartDate, range.endDate())
+                                .daysInclusive();
+        }
+
+        private boolean isEvaluableDate(
+                        LocalDate date,
+                        Optional<LocalDate> trackingStartDate) {
+
+                return trackingStartDate
+                                .map(startDate -> !date.isBefore(startDate))
+                                .orElse(true);
         }
 }
