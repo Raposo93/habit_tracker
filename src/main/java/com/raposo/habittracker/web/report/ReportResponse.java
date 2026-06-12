@@ -21,10 +21,10 @@ public record ReportResponse(
 
     public record HabitSummaryResponse(
             String habit,
-            double previousPeriodScore,
-            double currentPeriodScore,
-            double delta,
-            double trend,
+            Double previousPeriodScore,
+            Double currentPeriodScore,
+            Double delta,
+            String trend,
             int previousRecordedDays,
             int previousMissingDays,
             int currentRecordedDays,
