@@ -25,15 +25,21 @@ class ReportResponseMapperTest {
         ReportResponse response = mapper.toResponse(report);
 
         assertNull(response.summary().getFirst().previousPeriodScore());
+    }
 
+    @Test
+    void givenHabitReportWithNoBaselineWhenToResponseThenDeltaIsNull() {
+        HabitReport report = reportWithNoBaseline();
+
+        ReportResponseMapper mapper = new ReportResponseMapper();
+
+        ReportResponse response = mapper.toResponse(report);
+
+        assertNull(response.summary().getFirst().delta());
     }
 
     private HabitReport reportWithNoBaseline() {
-
-        ReportContext context = new ReportContext(
-                "0 = bad, 1 = weak, 2 = acceptable, 3 = good",
-                "Week starts on Monday and ends on Sunday",
-                "Missing entry means no stored data; period score treats it as 0");
+        ReportContext context = defaultContext();
 
         DateRange currentRange = DateRange.of(
                 LocalDate.of(2026, 5, 25),
@@ -43,6 +49,24 @@ class ReportResponseMapperTest {
                 LocalDate.of(2026, 5, 24));
         List<EntryReportRow> entries = List.of();
 
+        HabitSummaryRow summary = noBaselineSummary();
+
+        return new HabitReport(
+                context,
+                currentRange,
+                previousRange,
+                entries,
+                List.of(summary));
+    }
+
+    private ReportContext defaultContext() {
+        return new ReportContext(
+                "0 = bad, 1 = weak, 2 = acceptable, 3 = good",
+                "Week starts on Monday and ends on Sunday",
+                "Missing entry means no stored data; period score treats it as 0");
+    }
+
+    private HabitSummaryRow noBaselineSummary() {
         String habit = "habit";
         double previousPeriodScore = 0.0;
         double currentPeriodScore = 0.0;
@@ -50,10 +74,10 @@ class ReportResponseMapperTest {
         Trend trend = Trend.NO_BASELINE;
         int previousRecordedDays = 0;
         int previousMissingDays = 7;
-        int currentRecordedDays = 7;
-        int currentMissingDays = 0;
+        int currentRecordedDays = 0;
+        int currentMissingDays = 7;
 
-        HabitSummaryRow summary = new HabitSummaryRow(
+        return new HabitSummaryRow(
                 habit,
                 previousPeriodScore,
                 currentPeriodScore,
@@ -63,12 +87,5 @@ class ReportResponseMapperTest {
                 previousMissingDays,
                 currentRecordedDays,
                 currentMissingDays);
-
-        return new HabitReport(
-                context,
-                currentRange,
-                previousRange,
-                entries,
-                List.of(summary));
     }
 }
