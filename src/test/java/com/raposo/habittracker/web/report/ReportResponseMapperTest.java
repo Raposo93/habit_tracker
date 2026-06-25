@@ -1,5 +1,6 @@
 package com.raposo.habittracker.web.report;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.time.LocalDate;
@@ -38,7 +39,47 @@ class ReportResponseMapperTest {
         assertNull(response.summary().getFirst().delta());
     }
 
-    private HabitReport reportWithNoBaseline() {
+    @Test
+    void givenHabitReportWithNoBaselineWhenToResponseThenTrendIsNO_BASELINE() {
+        HabitReport report = reportWithNoBaseline();
+
+        ReportResponseMapper mapper = new ReportResponseMapper();
+
+        ReportResponse response = mapper.toResponse(report);
+
+        assertEquals(Trend.NO_BASELINE.name(), response.summary().getFirst().trend());
+    }
+
+    @Test
+    void givenHabitReportWithNoBaselineWhenToResponseThenRecordedAndMissingDaysArePreserved() {
+        int previousRecordedDays = 2;
+        int previousMissingDays = 5;
+        int currentRecordedDays = 3;
+        int currentMissingDays = 4;
+
+        HabitReport report = reportWithNoBaseline(
+                previousRecordedDays,
+                previousMissingDays,
+                currentRecordedDays,
+                currentMissingDays);
+
+        ReportResponseMapper mapper = new ReportResponseMapper();
+
+        ReportResponse response = mapper.toResponse(report);
+
+        ReportResponse.HabitSummaryResponse summary = response.summary().getFirst();
+
+        assertEquals(previousRecordedDays, summary.previousRecordedDays());
+        assertEquals(previousMissingDays, summary.previousMissingDays());
+        assertEquals(currentRecordedDays, summary.currentRecordedDays());
+        assertEquals(currentMissingDays, summary.currentMissingDays());
+    }
+
+    private HabitReport reportWithNoBaseline(
+            int previousRecordedDays,
+            int previousMissingDays,
+            int currentRecordedDays,
+            int currentMissingDays) {
         ReportContext context = defaultContext();
 
         DateRange currentRange = DateRange.of(
@@ -49,7 +90,11 @@ class ReportResponseMapperTest {
                 LocalDate.of(2026, 5, 24));
         List<EntryReportRow> entries = List.of();
 
-        HabitSummaryRow summary = noBaselineSummary();
+        HabitSummaryRow summary = noBaselineSummary(
+                previousRecordedDays,
+                previousMissingDays,
+                currentRecordedDays,
+                currentMissingDays);
 
         return new HabitReport(
                 context,
@@ -59,6 +104,10 @@ class ReportResponseMapperTest {
                 List.of(summary));
     }
 
+    private HabitReport reportWithNoBaseline() {
+        return reportWithNoBaseline(0, 7, 0, 7);
+    }
+
     private ReportContext defaultContext() {
         return new ReportContext(
                 "0 = bad, 1 = weak, 2 = acceptable, 3 = good",
@@ -66,16 +115,16 @@ class ReportResponseMapperTest {
                 "Missing entry means no stored data; period score treats it as 0");
     }
 
-    private HabitSummaryRow noBaselineSummary() {
+    private HabitSummaryRow noBaselineSummary(
+            int previousRecordedDays,
+            int previousMissingDays,
+            int currentRecordedDays,
+            int currentMissingDays) {
         String habit = "habit";
         double previousPeriodScore = 0.0;
         double currentPeriodScore = 0.0;
         double delta = 0.0;
         Trend trend = Trend.NO_BASELINE;
-        int previousRecordedDays = 0;
-        int previousMissingDays = 7;
-        int currentRecordedDays = 0;
-        int currentMissingDays = 7;
 
         return new HabitSummaryRow(
                 habit,
