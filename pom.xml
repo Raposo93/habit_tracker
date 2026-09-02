@@ -13,7 +13,7 @@
 
     <groupId>com.raposo</groupId>
     <artifactId>habit-tracker</artifactId>
-    <version>0.2.1</version>
+    <version>0.3.0</version>
 
     <properties>
         <java.version>21</java.version>
