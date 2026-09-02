@@ -2,8 +2,10 @@ package com.raposo.habittracker.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
@@ -29,8 +31,8 @@ class UpdateHabitEntryUseCaseTest {
             entryRepository);
 
     @Test
-    void givenKnownHabitAndExistingEntryWhenExecuteThenUpdateEntry() {
-        HabitEntryInput input = input();
+    void givenKnownHabitAndExistingEntryWhenExecuteThenUpdateScoreAndNote() {
+        HabitEntryInput input = input(3.0, "Corrected");
         given(habitRepository.findById(input.habitId())).willReturn(Optional.of(habit(input.habitId())));
         given(entryRepository.updateEntry(
                 input.date(),
@@ -47,8 +49,26 @@ class UpdateHabitEntryUseCaseTest {
     }
 
     @Test
-    void givenMissingEntryWhenExecuteThenThrowNotFound() {
-        HabitEntryInput input = input();
+    void givenExistingEntryWhenExecuteWithOmittedNoteThenRemoveStoredNote() {
+        HabitEntryInput input = input(2.0, null);
+        given(habitRepository.findById(input.habitId())).willReturn(Optional.of(habit(input.habitId())));
+        given(entryRepository.updateEntry(
+                input.date(),
+                input.habitId(),
+                new StoredEntry(2.0, "")))
+                .willReturn(true);
+
+        useCase.execute(input);
+
+        verify(entryRepository).updateEntry(
+                input.date(),
+                input.habitId(),
+                new StoredEntry(2.0, ""));
+    }
+
+    @Test
+    void givenMissingEntryWhenExecuteThenThrowNotFoundWithoutCreatingEntry() {
+        HabitEntryInput input = input(3.0, "Corrected");
         given(habitRepository.findById(input.habitId())).willReturn(Optional.of(habit(input.habitId())));
         given(entryRepository.updateEntry(
                 input.date(),
@@ -63,14 +83,15 @@ class UpdateHabitEntryUseCaseTest {
         assertEquals(
                 "Entry not found for habit sleep on 2026-09-02",
                 exception.getMessage());
+        verify(entryRepository, never()).createEntry(any(), any(), any());
     }
 
-    private static HabitEntryInput input() {
+    private static HabitEntryInput input(double score, String note) {
         return new HabitEntryInput(
                 LocalDate.of(2026, 9, 2),
                 HabitId.of("sleep"),
-                3.0,
-                "Corrected");
+                score,
+                note);
     }
 
     private static Habit habit(HabitId habitId) {

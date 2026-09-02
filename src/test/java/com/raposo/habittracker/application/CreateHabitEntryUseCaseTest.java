@@ -31,8 +31,8 @@ class CreateHabitEntryUseCaseTest {
             entryRepository);
 
     @Test
-    void givenKnownHabitAndMissingEntryWhenExecuteThenCreateEntry() {
-        HabitEntryInput input = input();
+    void givenTodayAndMissingEntryWhenExecuteThenCreateEntryByHabitId() {
+        HabitEntryInput input = input(LocalDate.now(), 3.0, "Rested");
         given(habitRepository.findById(input.habitId())).willReturn(Optional.of(habit(input.habitId())));
         given(entryRepository.createEntry(
                 input.date(),
@@ -46,6 +46,42 @@ class CreateHabitEntryUseCaseTest {
                 input.date(),
                 input.habitId(),
                 new StoredEntry(input.score(), input.note()));
+    }
+
+    @Test
+    void givenPreviousDateAndMissingEntryWhenExecuteThenCreateRetrospectiveEntry() {
+        HabitEntryInput input = input(LocalDate.now().minusDays(7), 2.0, "Retrospective");
+        given(habitRepository.findById(input.habitId())).willReturn(Optional.of(habit(input.habitId())));
+        given(entryRepository.createEntry(
+                input.date(),
+                input.habitId(),
+                new StoredEntry(input.score(), input.note())))
+                .willReturn(true);
+
+        useCase.execute(input);
+
+        verify(entryRepository).createEntry(
+                input.date(),
+                input.habitId(),
+                new StoredEntry(2.0, "Retrospective"));
+    }
+
+    @Test
+    void givenZeroScoreAndOmittedNoteWhenExecuteThenPersistRecordedZeroAndEmptyNote() {
+        HabitEntryInput input = input(LocalDate.of(2026, 9, 2), 0.0, null);
+        given(habitRepository.findById(input.habitId())).willReturn(Optional.of(habit(input.habitId())));
+        given(entryRepository.createEntry(
+                input.date(),
+                input.habitId(),
+                new StoredEntry(0.0, "")))
+                .willReturn(true);
+
+        useCase.execute(input);
+
+        verify(entryRepository).createEntry(
+                input.date(),
+                input.habitId(),
+                new StoredEntry(0.0, ""));
     }
 
     @Test
@@ -81,11 +117,15 @@ class CreateHabitEntryUseCaseTest {
     }
 
     private static HabitEntryInput input() {
+        return input(LocalDate.of(2026, 9, 2), 3.0, "Rested");
+    }
+
+    private static HabitEntryInput input(LocalDate date, double score, String note) {
         return new HabitEntryInput(
-                LocalDate.of(2026, 9, 2),
+                date,
                 HabitId.of("sleep"),
-                3.0,
-                "Rested");
+                score,
+                note);
     }
 
     private static Habit habit(HabitId habitId) {
