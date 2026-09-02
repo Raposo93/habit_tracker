@@ -106,6 +106,21 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
+        public Optional<StoredEntry> findEntry(LocalDate date, HabitId habitId) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean createEntry(LocalDate date, HabitId habitId, StoredEntry entry) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean updateEntry(LocalDate date, HabitId habitId, StoredEntry entry) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public Optional<LocalDate> findLatestEntryDate() {
             throw new UnsupportedOperationException();
         }

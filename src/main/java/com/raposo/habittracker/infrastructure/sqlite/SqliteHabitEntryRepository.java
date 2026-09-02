@@ -126,6 +126,86 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
     }
 
     @Override
+    public Optional<StoredEntry> findEntry(LocalDate date, HabitId habitId) {
+        String sql = """
+                SELECT score, note
+                FROM habit_entries
+                WHERE date = ?
+                  AND habit_id = ?
+                """;
+
+        try (
+                Connection connection = connect();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, date.toString());
+            statement.setString(2, habitId.value());
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(new StoredEntry(
+                            resultSet.getDouble("score"),
+                            resultSet.getString("note")));
+                }
+
+                return Optional.empty();
+            }
+
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to find entry", exception);
+        }
+    }
+
+    @Override
+    public boolean createEntry(LocalDate date, HabitId habitId, StoredEntry entry) {
+        String sql = """
+                INSERT INTO habit_entries (date, habit_id, score, note)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(date, habit_id) DO NOTHING
+                """;
+
+        try (
+                Connection connection = connect();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, date.toString());
+            statement.setString(2, habitId.value());
+            statement.setDouble(3, entry.score());
+            statement.setString(4, entry.note());
+
+            return statement.executeUpdate() == 1;
+
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to create entry", exception);
+        }
+    }
+
+    @Override
+    public boolean updateEntry(LocalDate date, HabitId habitId, StoredEntry entry) {
+        String sql = """
+                UPDATE habit_entries
+                SET score = ?, note = ?
+                WHERE date = ?
+                  AND habit_id = ?
+                """;
+
+        try (
+                Connection connection = connect();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setDouble(1, entry.score());
+            statement.setString(2, entry.note());
+            statement.setString(3, date.toString());
+            statement.setString(4, habitId.value());
+
+            return statement.executeUpdate() == 1;
+
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to update entry", exception);
+        }
+    }
+
+    @Override
     public void insertEntries(List<HabitEntry> entries) {
         if (entries.isEmpty()) {
             return;

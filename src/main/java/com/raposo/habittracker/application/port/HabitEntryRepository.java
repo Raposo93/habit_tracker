@@ -19,6 +19,12 @@ public interface HabitEntryRepository {
 
     Map<HabitId, StoredEntry> findEntriesByDate(LocalDate date);
 
+    Optional<StoredEntry> findEntry(LocalDate date, HabitId habitId);
+
+    boolean createEntry(LocalDate date, HabitId habitId, StoredEntry entry);
+
+    boolean updateEntry(LocalDate date, HabitId habitId, StoredEntry entry);
+
     void insertEntries(List<HabitEntry> entries);
 
     void updateEntries(List<HabitEntry> entries);
