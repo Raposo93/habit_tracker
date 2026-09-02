@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import com.raposo.habittracker.application.entry.HabitEntryInput;
 import com.raposo.habittracker.application.entry.HabitEntryNotFoundException;
+import com.raposo.habittracker.application.entry.UnknownHabitException;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
 import com.raposo.habittracker.application.port.HabitRepository;
 import com.raposo.habittracker.domain.Habit;
@@ -84,6 +86,19 @@ class UpdateHabitEntryUseCaseTest {
                 "Entry not found for habit sleep on 2026-09-02",
                 exception.getMessage());
         verify(entryRepository, never()).createEntry(any(), any(), any());
+    }
+
+    @Test
+    void givenUnknownHabitWhenExecuteThenDoNotWrite() {
+        HabitEntryInput input = input(3.0, "Corrected");
+        given(habitRepository.findById(input.habitId())).willReturn(Optional.empty());
+
+        UnknownHabitException exception = assertThrows(
+                UnknownHabitException.class,
+                () -> useCase.execute(input));
+
+        assertEquals("Unknown habit: sleep", exception.getMessage());
+        verifyNoInteractions(entryRepository);
     }
 
     private static HabitEntryInput input(double score, String note) {
