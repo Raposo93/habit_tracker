@@ -18,6 +18,7 @@ import java.util.Optional;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.HabitEntry;
+import com.raposo.habittracker.domain.HabitId;
 import com.raposo.habittracker.domain.StoredEntry;
 
 public class SqliteHabitEntryRepository implements HabitEntryRepository {
@@ -88,6 +89,39 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
 
         } catch (SQLException exception) {
             throw new IllegalStateException("Failed to find entries between dates", exception);
+        }
+    }
+
+    @Override
+    public Map<HabitId, StoredEntry> findEntriesByDate(LocalDate date) {
+        String sql = """
+                SELECT habit_id, score, note
+                FROM habit_entries
+                WHERE date = ?
+                """;
+
+        Map<HabitId, StoredEntry> entries = new HashMap<>();
+
+        try (
+                Connection connection = connect();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, date.toString());
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    HabitId habitId = HabitId.of(resultSet.getString("habit_id"));
+                    double score = resultSet.getDouble("score");
+                    String note = resultSet.getString("note");
+
+                    entries.put(habitId, new StoredEntry(score, note));
+                }
+            }
+
+            return entries;
+
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to find entries by date", exception);
         }
     }
 

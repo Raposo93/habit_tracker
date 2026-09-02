@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.HabitEntry;
+import com.raposo.habittracker.domain.HabitId;
 import com.raposo.habittracker.domain.StoredEntry;
 
 public interface HabitEntryRepository {
@@ -15,6 +16,8 @@ public interface HabitEntryRepository {
     Map<EntryKey, StoredEntry> findEntriesBetweenDates(
             LocalDate startDate,
             LocalDate endDate);
+
+    Map<HabitId, StoredEntry> findEntriesByDate(LocalDate date);
 
     void insertEntries(List<HabitEntry> entries);
 

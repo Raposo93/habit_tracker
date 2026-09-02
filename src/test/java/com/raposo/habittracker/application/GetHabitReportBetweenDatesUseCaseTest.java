@@ -17,6 +17,7 @@ import com.raposo.habittracker.application.report.HabitSummaryRow;
 import com.raposo.habittracker.domain.DateRange;
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.HabitEntry;
+import com.raposo.habittracker.domain.HabitId;
 import com.raposo.habittracker.domain.StoredEntry;
 
 class GetHabitReportBetweenDatesUseCaseTest {
@@ -91,6 +92,11 @@ class GetHabitReportBetweenDatesUseCaseTest {
             queriedRanges.add(range);
 
             return entriesByRange.getOrDefault(range, Map.of());
+        }
+
+        @Override
+        public Map<HabitId, StoredEntry> findEntriesByDate(LocalDate date) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

@@ -8,10 +8,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import com.raposo.habittracker.domain.HabitId;
+import com.raposo.habittracker.domain.StoredEntry;
 
 class SqliteHabitEntryRepositoryTest {
 
@@ -42,12 +46,40 @@ class SqliteHabitEntryRepositoryTest {
         assertTrue(result.isEmpty());
     }
 
+    @Test
+    void givenEntriesOnDifferentDatesWhenFindEntriesByDateThenReturnSelectedDateByHabitId() throws Exception {
+        Path dbPath = tempDir.resolve("habit_tracker.db");
+        SqliteHabitEntryRepository repository = new SqliteHabitEntryRepository(dbPath);
+
+        insertEntry(dbPath, "sleep", "Sleep", "2026-06-08", 0.0, "Tired");
+        insertEntry(dbPath, "exercise", "Exercise", "2026-06-08", 3.0, "Strong");
+        insertEntry(dbPath, "review", "Review", "2026-06-09", 2.0, "Later");
+
+        Map<HabitId, StoredEntry> result = repository.findEntriesByDate(LocalDate.of(2026, 6, 8));
+
+        assertEquals(
+                Map.of(
+                        HabitId.of("sleep"), new StoredEntry(0.0, "Tired"),
+                        HabitId.of("exercise"), new StoredEntry(3.0, "Strong")),
+                result);
+    }
+
     private static void insertEntry(
             Path dbPath,
             String habitId,
             String habitName,
             String date,
             double score) throws Exception {
+        insertEntry(dbPath, habitId, habitName, date, score, "");
+    }
+
+    private static void insertEntry(
+            Path dbPath,
+            String habitId,
+            String habitName,
+            String date,
+            double score,
+            String note) throws Exception {
 
         try (
                 Connection connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
@@ -60,8 +92,8 @@ class SqliteHabitEntryRepositoryTest {
 
             statement.executeUpdate("""
                     INSERT INTO habit_entries (date, habit_id, score, note)
-                    VALUES ('%s', '%s', %s, '')
-                    """.formatted(date, habitId, score));
+                    VALUES ('%s', '%s', %s, '%s')
+                    """.formatted(date, habitId, score, note));
         }
     }
 }

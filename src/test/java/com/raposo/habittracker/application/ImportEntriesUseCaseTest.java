@@ -221,6 +221,11 @@ class ImportEntriesUseCaseTest {
         }
 
         @Override
+        public Map<HabitId, StoredEntry> findEntriesByDate(LocalDate date) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public void insertEntries(List<HabitEntry> entries) {
             for (HabitEntry entry : entries) {
                 saveExisting(entry);
