@@ -9,7 +9,7 @@ cd "$ROOT_DIR"
 
 echo "Checking required tools..."
 
-for command in git java mvn; do
+for command in git java mvn node npm; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "Error: '$command' is not installed." >&2
         exit 1

@@ -24,6 +24,7 @@ The application can:
 
 * Java 21
 * Maven
+* Node.js 20.19+ or 22.12+
 * Google Sheets credentials
 * `SPREADSHEET_ID` environment variable
 
