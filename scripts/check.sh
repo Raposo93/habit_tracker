@@ -19,10 +19,10 @@ done
 echo
 echo "Running Git checks..."
 
-git diff --check
-git diff --cached --check
+git --no-pager diff --check
+git --no-pager diff --cached --check
 
-if git grep -nE '^(<<<<<<< .+|=======|>>>>>>> .+)$'; then
+if git --no-pager grep -nE '^(<<<<<<< .+|=======|>>>>>>> .+)$'; then
     echo "Error: unresolved merge conflict markers found." >&2
     exit 1
 fi
