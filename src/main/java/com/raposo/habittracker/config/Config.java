@@ -12,14 +12,12 @@ public class Config {
     private final Path dbPath;
     private final Path credentialsPath;
     private final Path tokensDirectoryPath;
-    private final String spreadsheetId;
 
     public Config() {
         this.applicationName = DEFAULT_APPLICATION_NAME;
         this.dbPath = pathFromEnvOrDefault("DB_PATH", DEFAULT_DB_PATH);
         this.credentialsPath = pathFromEnvOrDefault("CREDENTIALS_PATH", DEFAULT_CREDENTIALS_PATH);
         this.tokensDirectoryPath = pathFromEnvOrDefault("TOKENS_DIRECTORY_PATH", DEFAULT_TOKENS_DIRECTORY_PATH);
-        this.spreadsheetId = requiredEnv("SPREADSHEET_ID");
     }
 
     public String applicationName() {
@@ -39,7 +37,7 @@ public class Config {
     }
 
     public String spreadsheetId() {
-        return spreadsheetId;
+        return requiredEnv("SPREADSHEET_ID");
     }
 
     private static String requiredEnv(String name) {
