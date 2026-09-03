@@ -18,7 +18,7 @@ public record HabitEntryInput(
             throw new IllegalArgumentException("HabitId cannot be null");
         }
         if (!Double.isFinite(score) || score < 0 || score > 3) {
-            throw new IllegalArgumentException("Score must be between 0 and 3");
+            throw InvalidHabitEntryScoreException.outsideAllowedRange();
         }
 
         note = note == null ? "" : note;

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -35,6 +35,37 @@ describe("DailyEntryPage", () => {
     );
   });
 
+  it("shows loading while the selected context is pending", async () => {
+    const contextRequest = deferred();
+    loadDailyEntryContext.mockReturnValueOnce(contextRequest.promise);
+
+    render(<DailyEntryPage />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("Cargando hábitos");
+
+    await act(async () => {
+      contextRequest.resolve(contextWithExistingZero());
+    });
+
+    expect(await screen.findByRole("heading", { name: "Sleep" })).toBeVisible();
+  });
+
+  it("shows a load error and retries the same date", async () => {
+    loadDailyEntryContext.mockRejectedValueOnce({
+      code: "BACKEND_UNAVAILABLE",
+    });
+    render(<DailyEntryPage />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "No se puede conectar con el servidor",
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+
+    expect(await screen.findByRole("heading", { name: "Sleep" })).toBeVisible();
+    expect(loadDailyEntryContext).toHaveBeenCalledTimes(2);
+  });
+
   it("loads a retrospective date without converting it", async () => {
     const user = userEvent.setup();
     render(<DailyEntryPage />);
@@ -69,6 +100,109 @@ describe("DailyEntryPage", () => {
       expect(loadDailyEntryContext).toHaveBeenCalledTimes(2);
     });
     expect(await screen.findByText("Registrado")).toBeVisible();
+  });
+
+  it("blocks date changes and duplicate writes while saving", async () => {
+    const createRequest = deferred();
+    loadDailyEntryContext
+      .mockResolvedValueOnce(contextWithMissingEntry())
+      .mockResolvedValueOnce(contextWithExistingZero());
+    createDailyEntry.mockReturnValueOnce(createRequest.promise);
+    const user = userEvent.setup();
+    render(<DailyEntryPage />);
+
+    await screen.findByRole("heading", { name: "Sleep" });
+    await user.click(screen.getByRole("radio", { name: "2" }));
+    await user.click(screen.getByRole("button", { name: "Guardar entrada" }));
+
+    expect(screen.getByRole("button", { name: "Guardando…" })).toBeDisabled();
+    expect(screen.getByLabelText("Fecha")).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "2" })).toBeDisabled();
+    expect(createDailyEntry).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      createRequest.resolve();
+    });
+
+    expect(await screen.findByText("Entrada guardada.")).toBeVisible();
+    expect(screen.getByLabelText("Fecha")).toBeEnabled();
+  });
+
+  it("marks the context stale and blocks writes when refresh fails after saving", async () => {
+    const user = userEvent.setup();
+    loadDailyEntryContext
+      .mockResolvedValueOnce(contextWithMissingEntry())
+      .mockRejectedValueOnce({ code: "BACKEND_UNAVAILABLE" })
+      .mockResolvedValueOnce(contextWithExistingZero());
+    render(<DailyEntryPage />);
+
+    await screen.findByRole("heading", { name: "Sleep" });
+    await user.click(screen.getByRole("radio", { name: "3" }));
+    await user.click(screen.getByRole("button", { name: "Guardar entrada" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "El contexto está desactualizado",
+    );
+    expect(
+      screen.getByText(
+        "La entrada se guardó, pero el contexto quedó desactualizado.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Guardar entrada" })).toBeDisabled();
+    expect(createDailyEntry).toHaveBeenCalledTimes(1);
+
+    await user.click(
+      screen.getByRole("button", { name: "Reintentar carga" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Guardar corrección" }),
+    ).toBeEnabled();
+    expect(screen.queryByText("El contexto está desactualizado.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "La entrada se guardó, pero el contexto quedó desactualizado.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("treats a connection failure during a write as uncertain and blocks further writes", async () => {
+    const user = userEvent.setup();
+    loadDailyEntryContext
+      .mockResolvedValueOnce(contextWithMissingEntry())
+      .mockResolvedValueOnce(contextWithExistingZero());
+    createDailyEntry.mockRejectedValueOnce({
+      code: "BACKEND_UNAVAILABLE",
+    });
+    render(<DailyEntryPage />);
+
+    await screen.findByRole("heading", { name: "Sleep" });
+    await user.click(screen.getByRole("radio", { name: "2" }));
+    await user.click(screen.getByRole("button", { name: "Guardar entrada" }));
+
+    expect(
+      await screen.findByText(/no se puede saber si la entrada cambió/),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        "No se pudo confirmar si la entrada se guardó. Recarga el contexto antes de continuar.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Guardar entrada" })).toBeDisabled();
+    expect(createDailyEntry).toHaveBeenCalledTimes(1);
+
+    await user.click(
+      screen.getByRole("button", { name: "Reintentar carga" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Guardar corrección" }),
+    ).toBeEnabled();
+    expect(
+      screen.queryByText(
+        "No se pudo confirmar si la entrada se guardó. Recarga el contexto antes de continuar.",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("updates an existing entry by habit id and reloads its date", async () => {
@@ -120,4 +254,15 @@ function contextWithExistingZero() {
       },
     ],
   };
+}
+
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+
+  return { promise, resolve, reject };
 }

@@ -81,7 +81,16 @@ class DailyEntryControllerTest {
     void givenInvalidDateWhenGetContextThenReturnBadRequest() throws Exception {
         mockMvc.perform(get("/api/entries/context")
                 .param("date", "not-a-date"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_DATE"))
+                .andExpect(jsonPath("$.message").value("Date must use YYYY-MM-DD format"));
+    }
+
+    @Test
+    void givenMissingDateWhenGetContextThenReturnInvalidDate() throws Exception {
+        mockMvc.perform(get("/api/entries/context"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_DATE"));
     }
 
     @Test
@@ -135,7 +144,7 @@ class DailyEntryControllerTest {
                         }
                         """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_ENTRY"))
+                .andExpect(jsonPath("$.code").value("INVALID_SCORE"))
                 .andExpect(jsonPath("$.message").value("Score must be between 0 and 3"));
 
         verifyNoInteractions(createHabitEntryUseCase);
@@ -151,7 +160,7 @@ class DailyEntryControllerTest {
                         }
                         """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_ENTRY"))
+                .andExpect(jsonPath("$.code").value("INVALID_SCORE"))
                 .andExpect(jsonPath("$.message").value("Score cannot be null"));
 
         verifyNoInteractions(createHabitEntryUseCase);
@@ -190,7 +199,9 @@ class DailyEntryControllerTest {
                           "note": "Rested"
                         }
                         """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_DATE"))
+                .andExpect(jsonPath("$.message").value("Date must use YYYY-MM-DD format"));
 
         verifyNoInteractions(createHabitEntryUseCase);
     }

@@ -152,6 +152,51 @@ describe("HabitEntryForm", () => {
 
     expect(onUpdate).not.toHaveBeenCalled();
     expect(onCreate).not.toHaveBeenCalled();
+    expect(
+      screen.getByText("Corrección cancelada. No se cambió la entrada."),
+    ).toBeVisible();
+  });
+
+  it("preserves the draft and identifies an invalid score error", async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn().mockRejectedValue({ code: "INVALID_SCORE" });
+    render(
+      <HabitEntryForm
+        habit={missingEntryHabit()}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("radio", { name: "2,5" }));
+    await user.type(screen.getByRole("textbox", { name: "Nota" }), "Draft");
+    await user.click(screen.getByRole("button", { name: "Guardar entrada" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "El score no es válido",
+    );
+    expect(screen.getByRole("radio", { name: "2,5" })).toBeChecked();
+    expect(screen.getByRole("textbox", { name: "Nota" })).toHaveValue("Draft");
+  });
+
+  it.each([
+    ["BACKEND_UNAVAILABLE", "No se pudo confirmar si la entrada se guardó"],
+    ["UNKNOWN_HABIT", "El hábito ya no está disponible"],
+    ["INVALID_DATE", "La fecha no es válida"],
+  ])("shows a specific message for %s", async (code, expectedMessage) => {
+    const user = userEvent.setup();
+    render(
+      <HabitEntryForm
+        habit={missingEntryHabit()}
+        onCreate={vi.fn().mockRejectedValue({ code })}
+        onUpdate={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("radio", { name: "1" }));
+    await user.click(screen.getByRole("button", { name: "Guardar entrada" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(expectedMessage);
   });
 });
 

@@ -19,20 +19,29 @@ function todayAsApiDate() {
 export default function DailyEntryPage() {
   const [selectedDate, setSelectedDate] = useState(todayAsApiDate);
   const [context, setContext] = useState(null);
+  const [contextStatus, setContextStatus] = useState("loading");
+  const [contextError, setContextError] = useState(null);
+  const [staleReason, setStaleReason] = useState(null);
+  const [savingHabitId, setSavingHabitId] = useState(null);
 
   useEffect(() => {
     let ignoreResult = false;
     setContext(null);
+    setContextStatus("loading");
+    setContextError(null);
+    setStaleReason(null);
 
     loadDailyEntryContext(selectedDate)
       .then((loadedContext) => {
         if (!ignoreResult) {
           setContext(loadedContext);
+          setContextStatus("ready");
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (!ignoreResult) {
-          window.alert("No se pudieron cargar los hábitos.");
+          setContextStatus("error");
+          setContextError(error);
         }
       });
 
@@ -41,20 +50,75 @@ export default function DailyEntryPage() {
     };
   }, [selectedDate]);
 
-  async function reloadContext() {
-    const loadedContext = await loadDailyEntryContext(selectedDate);
-    setContext(loadedContext);
+  async function retryContextLoad() {
+    const statusAfterFailure = context === null ? "error" : "stale";
+    setContextStatus("loading");
+    setContextError(null);
+
+    try {
+      const loadedContext = await loadDailyEntryContext(selectedDate);
+      setContext(loadedContext);
+      setContextStatus("ready");
+      setStaleReason(null);
+    } catch (error) {
+      setContextStatus(statusAfterFailure);
+      setContextError(error);
+    }
   }
 
-  async function createEntry(habitId, entry) {
-    await createDailyEntry(selectedDate, habitId, entry);
-    await reloadContext();
+  async function refreshContextAfterWrite() {
+    try {
+      const loadedContext = await loadDailyEntryContext(selectedDate);
+      setContext(loadedContext);
+      setContextStatus("ready");
+      setContextError(null);
+      setStaleReason(null);
+      return true;
+    } catch (error) {
+      setContextStatus("stale");
+      setContextError(error);
+      setStaleReason("refresh-failed");
+      return false;
+    }
   }
 
-  async function updateEntry(habitId, entry) {
-    await updateDailyEntry(selectedDate, habitId, entry);
-    await reloadContext();
+  async function saveEntry(writeEntry, habitId, entry) {
+    if (contextStatus !== "ready" || savingHabitId !== null) {
+      throw new Error("Entry writes are currently blocked");
+    }
+
+    setSavingHabitId(habitId);
+
+    try {
+      try {
+        await writeEntry(selectedDate, habitId, entry);
+      } catch (error) {
+        if (error?.code === "BACKEND_UNAVAILABLE") {
+          setContextStatus("stale");
+          setContextError(error);
+          setStaleReason("write-uncertain");
+        }
+
+        throw error;
+      }
+
+      const refreshed = await refreshContextAfterWrite();
+      return { refreshed };
+    } finally {
+      setSavingHabitId(null);
+    }
   }
+
+  function createEntry(habitId, entry) {
+    return saveEntry(createDailyEntry, habitId, entry);
+  }
+
+  function updateEntry(habitId, entry) {
+    return saveEntry(updateDailyEntry, habitId, entry);
+  }
+
+  const writeBlocked = contextStatus !== "ready" || savingHabitId !== null;
+  const contextHasData = context !== null;
 
   return (
     <main className="app-shell">
@@ -77,11 +141,55 @@ export default function DailyEntryPage() {
             type="date"
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
+            disabled={savingHabitId !== null}
+            required
           />
         </label>
       </section>
 
       <section className="habit-section" aria-label="Hábitos activos">
+        {contextStatus === "loading" && !contextHasData && (
+          <p className="context-message" role="status">
+            Cargando hábitos…
+          </p>
+        )}
+
+        {contextStatus === "error" && (
+          <ContextLoadProblem
+            error={contextError}
+            onRetry={retryContextLoad}
+          />
+        )}
+
+        {contextStatus === "loading" && contextHasData && (
+          <p className="context-message" role="status">
+            Actualizando el contexto…
+          </p>
+        )}
+
+        {contextStatus === "stale" && (
+          <div className="context-message context-message--warning" role="alert">
+            <div>
+              <strong>El contexto está desactualizado.</strong>
+              {staleReason === "write-uncertain" ? (
+                <p>
+                  Se perdió la conexión durante el guardado y no se puede saber
+                  si la entrada cambió. Recarga el contexto antes de volver a
+                  guardar.
+                </p>
+              ) : (
+                <p>
+                  La entrada se guardó, pero no se pudieron recargar los datos.
+                  No puedes guardar más cambios hasta actualizar el contexto.
+                </p>
+              )}
+            </div>
+            <button type="button" onClick={retryContextLoad}>
+              Reintentar carga
+            </button>
+          </div>
+        )}
+
         {context?.habits.length === 0 && (
           <p className="empty-state">No hay hábitos activos.</p>
         )}
@@ -93,10 +201,31 @@ export default function DailyEntryPage() {
               habit={habit}
               onCreate={createEntry}
               onUpdate={updateEntry}
+              isSaving={savingHabitId === habit.habitId}
+              writeBlocked={writeBlocked}
+              contextStatus={contextStatus}
             />
           ))}
         </div>
       </section>
     </main>
+  );
+}
+
+function ContextLoadProblem({ error, onRetry }) {
+  const message =
+    error?.code === "BACKEND_UNAVAILABLE"
+      ? "No se puede conectar con el servidor."
+      : error?.code === "INVALID_DATE"
+        ? "La fecha seleccionada no es válida."
+        : "No se pudieron cargar los hábitos.";
+
+  return (
+    <div className="context-message context-message--error" role="alert">
+      <p>{message}</p>
+      <button type="button" onClick={onRetry}>
+        Reintentar
+      </button>
+    </div>
   );
 }

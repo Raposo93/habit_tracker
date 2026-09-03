@@ -18,6 +18,7 @@ import com.raposo.habittracker.application.GetDailyEntryContextUseCase;
 import com.raposo.habittracker.application.UpdateHabitEntryUseCase;
 import com.raposo.habittracker.application.entry.DailyEntryContext;
 import com.raposo.habittracker.application.entry.HabitEntryInput;
+import com.raposo.habittracker.application.entry.InvalidHabitEntryScoreException;
 import com.raposo.habittracker.domain.HabitId;
 
 @RestController
@@ -70,7 +71,7 @@ class DailyEntryController {
             String habitId,
             HabitEntryRequest request) {
         if (request.score() == null) {
-            throw new IllegalArgumentException("Score cannot be null");
+            throw InvalidHabitEntryScoreException.missing();
         }
 
         return new HabitEntryInput(

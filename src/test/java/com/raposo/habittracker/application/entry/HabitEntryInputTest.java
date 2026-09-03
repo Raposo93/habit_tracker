@@ -39,8 +39,8 @@ class HabitEntryInputTest {
     @ParameterizedTest
     @MethodSource("invalidScores")
     void givenInvalidScoreWhenCreateThenRejectInput(double score) {
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        InvalidHabitEntryScoreException exception = assertThrows(
+                InvalidHabitEntryScoreException.class,
                 () -> new HabitEntryInput(DATE, HABIT_ID, score, ""));
 
         assertEquals("Score must be between 0 and 3", exception.getMessage());
