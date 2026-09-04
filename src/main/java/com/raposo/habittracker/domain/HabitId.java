@@ -1,5 +1,7 @@
 package com.raposo.habittracker.domain;
 
+import java.util.UUID;
+
 public record HabitId(String value) {
 
     public HabitId {
@@ -12,5 +14,9 @@ public record HabitId(String value) {
 
     public static HabitId of(String value) {
         return new HabitId(value);
+    }
+
+    public static HabitId generate() {
+        return new HabitId(UUID.randomUUID().toString());
     }
 }

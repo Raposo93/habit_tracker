@@ -5,6 +5,7 @@ Version 0.4 introduces habit management without changing the identity model used
 ## Identity and naming
 
 - `HabitId` is the stable identity of a habit.
+- New habits receive a server-generated UUID as their stable `HabitId`.
 - A habit name is editable and must not be used as its identity.
 - Habit names remain unique.
 - Renaming a habit preserves its `HabitId` and historical entries.

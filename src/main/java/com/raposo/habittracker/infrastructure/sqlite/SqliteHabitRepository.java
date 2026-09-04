@@ -24,6 +24,30 @@ public class SqliteHabitRepository implements HabitRepository {
     }
 
     @Override
+    public boolean create(Habit habit) {
+        String sql = """
+                INSERT INTO habits (id, name, cadence, active)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(name) DO NOTHING
+                """;
+
+        try (
+                Connection connection = connect();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, habit.id().value());
+            statement.setString(2, habit.name());
+            statement.setString(3, habit.cadence().name());
+            statement.setInt(4, habit.active() ? 1 : 0);
+
+            return statement.executeUpdate() == 1;
+
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to create habit", exception);
+        }
+    }
+
+    @Override
     public Optional<Habit> findById(HabitId id) {
         String sql = """
                 SELECT id, name, cadence, active

@@ -9,17 +9,32 @@ import org.junit.jupiter.api.Test;
 import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitCadence;
 import com.raposo.habittracker.domain.HabitId;
-import com.raposo.habittracker.web.habit.HabitCatalogResponse.HabitResponse;
 
-class HabitCatalogResponseMapperTest {
+class HabitResponseMapperTest {
+
+    private final HabitResponseMapper mapper = new HabitResponseMapper();
 
     @Test
-    void givenActiveAndInactiveHabitsWhenToResponseThenMapManagementFields() {
+    void givenHabitWhenToResponseThenMapManagementFields() {
+        Habit habit = Habit.active(
+                HabitId.of("exercise"),
+                "Exercise",
+                HabitCadence.DAILY);
+
+        HabitResponse response = mapper.toResponse(habit);
+
+        assertEquals(
+                new HabitResponse("exercise", "Exercise", "DAILY", true),
+                response);
+    }
+
+    @Test
+    void givenActiveAndInactiveHabitsWhenToCatalogResponseThenMapBoth() {
         List<Habit> habits = List.of(
                 Habit.active(HabitId.of("exercise"), "Exercise", HabitCadence.DAILY),
                 Habit.inactive(HabitId.of("review"), "Review", HabitCadence.WEEKLY));
 
-        HabitCatalogResponse response = new HabitCatalogResponseMapper().toResponse(habits);
+        HabitCatalogResponse response = mapper.toCatalogResponse(habits);
 
         assertEquals(
                 List.of(

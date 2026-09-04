@@ -299,6 +299,11 @@ class ImportEntriesUseCaseTest {
         }
 
         @Override
+        public boolean create(Habit habit) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public Optional<Habit> findByExactName(String name) {
             return habitNames.stream()
                     .filter(habitName -> habitName.equals(name))

@@ -7,6 +7,8 @@ import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitId;
 
 public interface HabitRepository {
+    boolean create(Habit habit);
+
     Optional<Habit> findById(HabitId id);
 
     Optional<Habit> findByExactName(String name);

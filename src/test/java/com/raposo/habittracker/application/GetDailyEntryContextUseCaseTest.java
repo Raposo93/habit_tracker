@@ -65,6 +65,11 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
+        public boolean create(Habit habit) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public Optional<Habit> findById(HabitId id) {
             return habits.stream()
                     .filter(habit -> habit.id().equals(id))
