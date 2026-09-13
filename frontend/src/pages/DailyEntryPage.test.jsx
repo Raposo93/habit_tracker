@@ -26,6 +26,9 @@ describe("DailyEntryPage", () => {
   it("loads the selected date and renders the stored context", async () => {
     render(<DailyEntryPage />);
 
+    expect(
+      screen.getByRole("img", { name: "Ramón, la mascota de Habit Tracker" }),
+    ).toBeVisible();
     expect(await screen.findByRole("heading", { name: "Sleep" })).toBeVisible();
     expect(screen.getByLabelText("Valor almacenado")).toHaveTextContent(
       "Actual0Tired",
@@ -64,6 +67,18 @@ describe("DailyEntryPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Sleep" })).toBeVisible();
     expect(loadDailyEntryContext).toHaveBeenCalledTimes(2);
+  });
+
+  it("lets Ramón introduce an empty habit list", async () => {
+    loadDailyEntryContext.mockResolvedValueOnce({
+      date: "2026-09-03",
+      habits: [],
+    });
+    render(<DailyEntryPage />);
+
+    expect(
+      await screen.findByText("Ramón no ha encontrado hábitos activos."),
+    ).toBeVisible();
   });
 
   it("loads a retrospective date without converting it", async () => {

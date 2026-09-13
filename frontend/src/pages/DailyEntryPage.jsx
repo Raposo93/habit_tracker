@@ -123,11 +123,18 @@ export default function DailyEntryPage() {
   return (
     <main className="app-shell">
       <header className="page-header">
-        <p className="eyebrow">Seguimiento diario</p>
-        <h1>Habit Tracker</h1>
-        <p className="page-intro">
-          Registra el día de hoy o corrige cualquier fecha anterior.
-        </p>
+        <div>
+          <p className="eyebrow">Seguimiento diario</p>
+          <h1>Habit Tracker</h1>
+          <p className="page-intro">
+            Registra el día de hoy o corrige cualquier fecha anterior.
+          </p>
+        </div>
+        <img
+          className="page-header__mascot"
+          src="/assets/ramon.png"
+          alt="Ramón, la mascota de Habit Tracker"
+        />
       </header>
 
       <section className="date-panel" aria-labelledby="date-heading">
@@ -191,7 +198,9 @@ export default function DailyEntryPage() {
         )}
 
         {context?.habits.length === 0 && (
-          <p className="empty-state">No hay hábitos activos.</p>
+          <p className="empty-state">
+            Ramón no ha encontrado hábitos activos.
+          </p>
         )}
 
         <div className="habit-grid">
@@ -213,7 +222,7 @@ export default function DailyEntryPage() {
 }
 
 function ContextLoadProblem({ error, onRetry }) {
-  const message =
+  const detail =
     error?.code === "BACKEND_UNAVAILABLE"
       ? "No se puede conectar con el servidor."
       : error?.code === "INVALID_DATE"
@@ -222,7 +231,8 @@ function ContextLoadProblem({ error, onRetry }) {
 
   return (
     <div className="context-message context-message--error" role="alert">
-      <p>{message}</p>
+      <strong>Ramón no pudo cargar tus hábitos.</strong>
+      <p>{detail}</p>
       <button type="button" onClick={onRetry}>
         Reintentar
       </button>

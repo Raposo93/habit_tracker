@@ -1,6 +1,12 @@
 # Habit Tracker
 
+<p align="center">
+  <img src="frontend/public/assets/ramon.png" alt="Ramón, the Habit Tracker pixel-art ram mascot" width="180">
+</p>
+
 Habit Tracker is a Java and React application for recording, storing and analysing habit entries. It supports browser-based daily entry and correction backed by SQLite, together with the existing CLI workflow for Google Sheets imports and reports.
+
+Ramón, the pixel-art ram above, is the project mascot.
 
 ## Current status
 

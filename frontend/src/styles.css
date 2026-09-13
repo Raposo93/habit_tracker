@@ -41,7 +41,18 @@ textarea,
 }
 
 .page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(5.5rem, 24vw, 7.5rem);
+  align-items: end;
+  gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.page-header__mascot {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
 }
 
 .eyebrow,
@@ -139,6 +150,10 @@ h2 {
 
 .context-message p + p {
   margin-top: 0.4rem;
+}
+
+.context-message strong + p {
+  margin-top: 0.35rem;
 }
 
 .context-message button {
