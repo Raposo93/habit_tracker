@@ -17,6 +17,7 @@ vi.mock("../api/dailyEntries.js", () => ({
 
 describe("DailyEntryPage", () => {
   beforeEach(() => {
+    vi.unstubAllGlobals();
     vi.clearAllMocks();
     loadDailyEntryContext.mockResolvedValue(contextWithExistingZero());
     createDailyEntry.mockResolvedValue(undefined);
@@ -79,6 +80,44 @@ describe("DailyEntryPage", () => {
     expect(
       await screen.findByText("Ramón no ha encontrado hábitos activos."),
     ).toBeVisible();
+  });
+
+  it("keeps Ramón in view after his header image scrolls away", () => {
+    let notifyIntersection;
+    const disconnect = vi.fn();
+    const observe = vi.fn();
+
+    class IntersectionObserverMock {
+      constructor(callback) {
+        notifyIntersection = callback;
+      }
+
+      observe(...args) {
+        observe(...args);
+      }
+
+      disconnect(...args) {
+        disconnect(...args);
+      }
+    }
+
+    vi.stubGlobal("IntersectionObserver", IntersectionObserverMock);
+
+    const { container, unmount } = render(<DailyEntryPage />);
+
+    expect(observe).toHaveBeenCalledOnce();
+    expect(container.querySelector(".ramon-companion")).not.toBeInTheDocument();
+
+    act(() => notifyIntersection([{ isIntersecting: false }]));
+
+    expect(container.querySelector(".ramon-companion")).toBeVisible();
+
+    act(() => notifyIntersection([{ isIntersecting: true }]));
+
+    expect(container.querySelector(".ramon-companion")).not.toBeInTheDocument();
+
+    unmount();
+    expect(disconnect).toHaveBeenCalledOnce();
   });
 
   it("loads a retrospective date without converting it", async () => {

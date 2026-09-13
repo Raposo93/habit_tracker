@@ -55,6 +55,19 @@ textarea,
   image-rendering: pixelated;
 }
 
+.ramon-companion {
+  position: fixed;
+  right: -0.5rem;
+  bottom: calc(0.25rem + env(safe-area-inset-bottom));
+  z-index: 10;
+  display: block;
+  width: 3.25rem;
+  height: auto;
+  filter: drop-shadow(0 0.2rem 0.35rem rgba(35, 65, 55, 0.24));
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
 .eyebrow,
 .habit-card__label {
   margin: 0 0 0.35rem;
@@ -416,6 +429,12 @@ textarea:disabled {
 
   .habit-card {
     padding: 1.25rem;
+  }
+
+  .ramon-companion {
+    right: max(1.25rem, calc((100vw - 72rem) / 2 + 1.25rem));
+    bottom: 1.25rem;
+    width: 4.25rem;
   }
 }
 

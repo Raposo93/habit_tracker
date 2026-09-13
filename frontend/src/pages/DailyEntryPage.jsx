@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   createDailyEntry,
@@ -23,6 +23,25 @@ export default function DailyEntryPage() {
   const [contextError, setContextError] = useState(null);
   const [staleReason, setStaleReason] = useState(null);
   const [savingHabitId, setSavingHabitId] = useState(null);
+  const [ramonIsFollowing, setRamonIsFollowing] = useState(false);
+  const ramonHeaderRef = useRef(null);
+
+  useEffect(() => {
+    const ramonHeader = ramonHeaderRef.current;
+
+    if (ramonHeader === null || !("IntersectionObserver" in window)) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setRamonIsFollowing(!entry.isIntersecting),
+      { threshold: 0.25 },
+    );
+
+    observer.observe(ramonHeader);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let ignoreResult = false;
@@ -131,11 +150,21 @@ export default function DailyEntryPage() {
           </p>
         </div>
         <img
+          ref={ramonHeaderRef}
           className="page-header__mascot"
           src="/assets/ramon.png"
           alt="Ramón, la mascota de Habit Tracker"
         />
       </header>
+
+      {ramonIsFollowing && (
+        <img
+          className="ramon-companion"
+          src="/assets/ramon.png"
+          alt=""
+          aria-hidden="true"
+        />
+      )}
 
       <section className="date-panel" aria-labelledby="date-heading">
         <div>
