@@ -7,6 +7,9 @@ import {
 } from "../api/dailyEntries.js";
 import HabitEntryForm from "../components/HabitEntryForm.jsx";
 
+const RAMON_EASTER_EGG_CLICK_COUNT = 7;
+const RAMON_EASTER_EGG_DURATION_MS = 1600;
+
 function todayAsApiDate() {
   const today = new Date();
   const year = today.getFullYear();
@@ -24,7 +27,9 @@ export default function DailyEntryPage() {
   const [staleReason, setStaleReason] = useState(null);
   const [savingHabitId, setSavingHabitId] = useState(null);
   const [ramonIsFollowing, setRamonIsFollowing] = useState(false);
+  const [ramonIsEatingApple, setRamonIsEatingApple] = useState(false);
   const ramonHeaderRef = useRef(null);
+  const ramonClickCount = useRef(0);
 
   useEffect(() => {
     const ramonHeader = ramonHeaderRef.current;
@@ -42,6 +47,19 @@ export default function DailyEntryPage() {
 
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!ramonIsEatingApple) {
+      return undefined;
+    }
+
+    const hideAnimation = window.setTimeout(
+      () => setRamonIsEatingApple(false),
+      RAMON_EASTER_EGG_DURATION_MS,
+    );
+
+    return () => window.clearTimeout(hideAnimation);
+  }, [ramonIsEatingApple]);
 
   useEffect(() => {
     let ignoreResult = false;
@@ -136,6 +154,19 @@ export default function DailyEntryPage() {
     return saveEntry(updateDailyEntry, habitId, entry);
   }
 
+  function greetRamon() {
+    if (ramonIsEatingApple) {
+      return;
+    }
+
+    ramonClickCount.current += 1;
+
+    if (ramonClickCount.current === RAMON_EASTER_EGG_CLICK_COUNT) {
+      ramonClickCount.current = 0;
+      setRamonIsEatingApple(true);
+    }
+  }
+
   const writeBlocked = contextStatus !== "ready" || savingHabitId !== null;
   const contextHasData = context !== null;
 
@@ -149,21 +180,48 @@ export default function DailyEntryPage() {
             Registra el día de hoy o corrige cualquier fecha anterior.
           </p>
         </div>
-        <img
+        <button
           ref={ramonHeaderRef}
-          className="page-header__mascot"
-          src="/assets/ramon.png"
-          alt="Ramón, la mascota de Habit Tracker"
-        />
+          className="ramon-trigger ramon-trigger--header"
+          type="button"
+          onClick={greetRamon}
+        >
+          <img
+            className="page-header__mascot"
+            src="/assets/ramon.png"
+            alt="Ramón, la mascota de Habit Tracker"
+          />
+        </button>
       </header>
 
-      {ramonIsFollowing && (
+      <button
+        className={`ramon-trigger ramon-companion ${
+          ramonIsFollowing ? "ramon-companion--visible" : ""
+        }`}
+        type="button"
+        onClick={greetRamon}
+        tabIndex="-1"
+        aria-hidden="true"
+      >
         <img
-          className="ramon-companion"
+          className="ramon-companion__image"
           src="/assets/ramon.png"
           alt=""
-          aria-hidden="true"
         />
+      </button>
+
+      {ramonIsEatingApple && (
+        <div
+          className="ramon-easter-egg"
+          role="status"
+          aria-label="Ramón se come una manzana"
+        >
+          <span
+            className="ramon-easter-egg__sprite"
+            onAnimationEnd={() => setRamonIsEatingApple(false)}
+            aria-hidden="true"
+          />
+        </div>
       )}
 
       <section className="date-panel" aria-labelledby="date-heading">

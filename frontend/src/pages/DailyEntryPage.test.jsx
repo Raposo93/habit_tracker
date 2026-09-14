@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,6 +17,7 @@ vi.mock("../api/dailyEntries.js", () => ({
 
 describe("DailyEntryPage", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
     loadDailyEntryContext.mockResolvedValue(contextWithExistingZero());
@@ -104,20 +105,50 @@ describe("DailyEntryPage", () => {
     vi.stubGlobal("IntersectionObserver", IntersectionObserverMock);
 
     const { container, unmount } = render(<DailyEntryPage />);
+    const ramonCompanion = container.querySelector(".ramon-companion");
 
     expect(observe).toHaveBeenCalledOnce();
-    expect(container.querySelector(".ramon-companion")).not.toBeInTheDocument();
+    expect(ramonCompanion).not.toHaveClass("ramon-companion--visible");
 
     act(() => notifyIntersection([{ isIntersecting: false }]));
 
-    expect(container.querySelector(".ramon-companion")).toBeVisible();
+    expect(ramonCompanion).toHaveClass("ramon-companion--visible");
 
     act(() => notifyIntersection([{ isIntersecting: true }]));
 
-    expect(container.querySelector(".ramon-companion")).not.toBeInTheDocument();
+    expect(ramonCompanion).not.toHaveClass("ramon-companion--visible");
+    expect(container.querySelector(".ramon-companion")).toBe(ramonCompanion);
 
     unmount();
     expect(disconnect).toHaveBeenCalledOnce();
+  });
+
+  it("shows Ramón eating an apple after seven clicks", () => {
+    vi.useFakeTimers();
+    render(<DailyEntryPage />);
+    const ramon = screen.getByRole("button", {
+      name: "Ramón, la mascota de Habit Tracker",
+    });
+
+    for (let click = 1; click < 7; click += 1) {
+      fireEvent.click(ramon);
+    }
+
+    expect(
+      screen.queryByRole("status", { name: "Ramón se come una manzana" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(ramon);
+
+    expect(
+      screen.getByRole("status", { name: "Ramón se come una manzana" }),
+    ).toBeVisible();
+
+    act(() => vi.advanceTimersByTime(1600));
+
+    expect(
+      screen.queryByRole("status", { name: "Ramón se come una manzana" }),
+    ).not.toBeInTheDocument();
   });
 
   it("loads a retrospective date without converting it", async () => {

@@ -55,6 +55,19 @@ textarea,
   image-rendering: pixelated;
 }
 
+.ramon-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.ramon-trigger--header {
+  width: 100%;
+}
+
 .ramon-companion {
   position: fixed;
   right: -0.5rem;
@@ -62,10 +75,91 @@ textarea,
   z-index: 10;
   display: block;
   width: 3.25rem;
+  min-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(1rem);
+  transition:
+    opacity 180ms ease-out,
+    transform 220ms ease-out,
+    visibility 0s linear 220ms;
+  pointer-events: none;
+}
+
+.ramon-companion--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  transition:
+    opacity 180ms ease-out,
+    transform 220ms ease-out;
+  pointer-events: auto;
+}
+
+.ramon-companion__image {
+  display: block;
+  width: 100%;
   height: auto;
   filter: drop-shadow(0 0.2rem 0.35rem rgba(35, 65, 55, 0.24));
   image-rendering: pixelated;
   pointer-events: none;
+}
+
+.ramon-easter-egg {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.ramon-easter-egg__sprite {
+  display: block;
+  width: clamp(9rem, 45vw, 15rem);
+  aspect-ratio: 1;
+  background-image: url("/assets/ramon-apple-sprite.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 400% 200%;
+  filter: drop-shadow(0 0.5rem 0.8rem rgba(35, 65, 55, 0.22));
+  image-rendering: pixelated;
+  animation: ramon-eats-apple 1.6s steps(1, end) forwards;
+}
+
+@keyframes ramon-eats-apple {
+  0% {
+    background-position: 0 0;
+  }
+
+  12.5% {
+    background-position: 33.333333% 0;
+  }
+
+  25% {
+    background-position: 66.666667% 0;
+  }
+
+  37.5% {
+    background-position: 100% 0;
+  }
+
+  50% {
+    background-position: 0 100%;
+  }
+
+  62.5% {
+    background-position: 33.333333% 100%;
+  }
+
+  75% {
+    background-position: 66.666667% 100%;
+  }
+
+  87.5%,
+  100% {
+    background-position: 100% 100%;
+  }
 }
 
 .eyebrow,
@@ -341,6 +435,7 @@ h2 {
 .score-option input:focus-visible + span,
 .date-field input:focus-visible,
 .note-field textarea:focus-visible,
+.ramon-trigger:focus-visible,
 .stored-entry__toggle:focus-visible,
 .save-button:focus-visible {
   outline: 3px solid #f2b84b;
@@ -444,5 +539,9 @@ textarea:disabled {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .ramon-easter-egg__sprite {
+    animation-duration: 0.01ms !important;
   }
 }
