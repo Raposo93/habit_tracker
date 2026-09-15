@@ -56,6 +56,7 @@ textarea,
 }
 
 .ramon-trigger {
+  position: relative;
   padding: 0;
   border: 0;
   background: transparent;
@@ -105,26 +106,40 @@ textarea,
   pointer-events: none;
 }
 
-.ramon-easter-egg {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
+.ramon-trigger--eating .page-header__mascot,
+.ramon-trigger--eating .ramon-companion__image {
+  visibility: hidden;
 }
 
 .ramon-easter-egg__sprite {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
   display: block;
-  width: clamp(9rem, 45vw, 15rem);
+  width: 100%;
   aspect-ratio: 1;
   background-image: url("/assets/ramon-apple-sprite.png");
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 400% 200%;
-  filter: drop-shadow(0 0.5rem 0.8rem rgba(35, 65, 55, 0.22));
+  filter: drop-shadow(0 0.2rem 0.35rem rgba(35, 65, 55, 0.24));
   image-rendering: pixelated;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
   animation: ramon-eats-apple 1.6s steps(1, end) forwards;
+}
+
+.ramon-easter-egg__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @keyframes ramon-eats-apple {

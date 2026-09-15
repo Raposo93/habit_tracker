@@ -123,7 +123,7 @@ describe("DailyEntryPage", () => {
     expect(disconnect).toHaveBeenCalledOnce();
   });
 
-  it("shows Ramón eating an apple after seven clicks", () => {
+  it("animates the clicked Ramón after seven clicks", () => {
     vi.useFakeTimers();
     render(<DailyEntryPage />);
     const ramon = screen.getByRole("button", {
@@ -140,14 +140,40 @@ describe("DailyEntryPage", () => {
 
     fireEvent.click(ramon);
 
+    expect(ramon).toHaveClass("ramon-trigger--eating");
+    expect(
+      ramon.querySelector(".ramon-easter-egg__sprite"),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("status", { name: "Ramón se come una manzana" }),
-    ).toBeVisible();
+    ).toBeInTheDocument();
 
     act(() => vi.advanceTimersByTime(1600));
 
+    expect(ramon).not.toHaveClass("ramon-trigger--eating");
+    expect(
+      ramon.querySelector(".ramon-easter-egg__sprite"),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("status", { name: "Ramón se come una manzana" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("animates the floating Ramón when he receives the seventh click", () => {
+    vi.useFakeTimers();
+    const { container } = render(<DailyEntryPage />);
+    const ramonCompanion = container.querySelector(".ramon-companion");
+
+    for (let click = 0; click < 7; click += 1) {
+      fireEvent.click(ramonCompanion);
+    }
+
+    expect(ramonCompanion).toHaveClass("ramon-trigger--eating");
+    expect(
+      ramonCompanion.querySelector(".ramon-easter-egg__sprite"),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector(".ramon-trigger--header .ramon-easter-egg__sprite"),
     ).not.toBeInTheDocument();
   });
 
