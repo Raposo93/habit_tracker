@@ -84,6 +84,7 @@ describe("DailyEntryPage", () => {
   });
 
   it("keeps Ramón in view after his header image scrolls away", () => {
+    vi.useFakeTimers();
     let notifyIntersection;
     const disconnect = vi.fn();
     const observe = vi.fn();
@@ -113,6 +114,16 @@ describe("DailyEntryPage", () => {
     act(() => notifyIntersection([{ isIntersecting: false }]));
 
     expect(ramonCompanion).toHaveClass("ramon-companion--visible");
+    expect(ramonCompanion.querySelector(".ramon-sprite")).toHaveAttribute(
+      "data-animation",
+      "walkLeft",
+    );
+
+    act(() => vi.advanceTimersByTime(650));
+    expect(ramonCompanion.querySelector(".ramon-sprite")).toHaveAttribute(
+      "data-animation",
+      "idle",
+    );
 
     act(() => notifyIntersection([{ isIntersecting: true }]));
 
@@ -140,20 +151,20 @@ describe("DailyEntryPage", () => {
 
     fireEvent.click(ramon);
 
-    expect(ramon).toHaveClass("ramon-trigger--eating");
-    expect(
-      ramon.querySelector(".ramon-easter-egg__sprite"),
-    ).toBeInTheDocument();
+    expect(ramon.querySelector(".ramon-sprite")).toHaveAttribute(
+      "data-animation",
+      "apple",
+    );
     expect(
       screen.getByRole("status", { name: "Ramón se come una manzana" }),
     ).toBeInTheDocument();
 
     act(() => vi.advanceTimersByTime(1600));
 
-    expect(ramon).not.toHaveClass("ramon-trigger--eating");
-    expect(
-      ramon.querySelector(".ramon-easter-egg__sprite"),
-    ).not.toBeInTheDocument();
+    expect(ramon.querySelector(".ramon-sprite")).toHaveAttribute(
+      "data-animation",
+      "idle",
+    );
     expect(
       screen.queryByRole("status", { name: "Ramón se come una manzana" }),
     ).not.toBeInTheDocument();
@@ -168,13 +179,14 @@ describe("DailyEntryPage", () => {
       fireEvent.click(ramonCompanion);
     }
 
-    expect(ramonCompanion).toHaveClass("ramon-trigger--eating");
-    expect(
-      ramonCompanion.querySelector(".ramon-easter-egg__sprite"),
-    ).toBeInTheDocument();
-    expect(
-      container.querySelector(".ramon-trigger--header .ramon-easter-egg__sprite"),
-    ).not.toBeInTheDocument();
+    expect(ramonCompanion.querySelector(".ramon-sprite")).toHaveAttribute(
+      "data-animation",
+      "apple",
+    );
+    expect(container.querySelector(".ramon-trigger--header .ramon-sprite")).toHaveAttribute(
+      "data-animation",
+      "idle",
+    );
   });
 
   it("loads a retrospective date without converting it", async () => {
@@ -211,6 +223,10 @@ describe("DailyEntryPage", () => {
       expect(loadDailyEntryContext).toHaveBeenCalledTimes(2);
     });
     expect(await screen.findByText("Registrado")).toBeVisible();
+    expect(screen.getByRole("img", { name: "Ramón, la mascota de Habit Tracker" })).toHaveAttribute(
+      "data-animation",
+      "happy",
+    );
   });
 
   it("blocks date changes and duplicate writes while saving", async () => {
@@ -299,6 +315,10 @@ describe("DailyEntryPage", () => {
         "No se pudo confirmar si la entrada se guardó. Recarga el contexto antes de continuar.",
       ),
     ).toBeVisible();
+    expect(screen.getByRole("img", { name: "Ramón, la mascota de Habit Tracker" })).toHaveAttribute(
+      "data-animation",
+      "sleepy",
+    );
     expect(screen.getByRole("button", { name: "Guardar entrada" })).toBeDisabled();
     expect(createDailyEntry).toHaveBeenCalledTimes(1);
 

@@ -6,9 +6,9 @@ import {
   updateDailyEntry,
 } from "../api/dailyEntries.js";
 import HabitEntryForm from "../components/HabitEntryForm.jsx";
+import Ramon from "../components/Ramon.jsx";
 
 const RAMON_EASTER_EGG_CLICK_COUNT = 7;
-const RAMON_EASTER_EGG_DURATION_MS = 1600;
 
 function todayAsApiDate() {
   const today = new Date();
@@ -27,9 +27,12 @@ export default function DailyEntryPage() {
   const [staleReason, setStaleReason] = useState(null);
   const [savingHabitId, setSavingHabitId] = useState(null);
   const [ramonIsFollowing, setRamonIsFollowing] = useState(false);
-  const [ramonEatingTarget, setRamonEatingTarget] = useState(null);
+  const [ramonArrival, setRamonArrival] = useState(false);
+  const [ramonReaction, setRamonReaction] = useState(null);
   const ramonHeaderRef = useRef(null);
+  const ramonFollowingRef = useRef(false);
   const ramonClickCount = useRef(0);
+  const ramonReactionId = useRef(0);
 
   useEffect(() => {
     const ramonHeader = ramonHeaderRef.current;
@@ -39,7 +42,13 @@ export default function DailyEntryPage() {
     }
 
     const observer = new IntersectionObserver(
-      ([entry]) => setRamonIsFollowing(!entry.isIntersecting),
+      ([entry]) => {
+        const following = !entry.isIntersecting;
+        if (following && !ramonFollowingRef.current) setRamonArrival(true);
+        if (!following) setRamonArrival(false);
+        ramonFollowingRef.current = following;
+        setRamonIsFollowing(following);
+      },
       { threshold: 0.25 },
     );
 
@@ -47,19 +56,6 @@ export default function DailyEntryPage() {
 
     return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (ramonEatingTarget === null) {
-      return undefined;
-    }
-
-    const hideAnimation = window.setTimeout(
-      () => setRamonEatingTarget(null),
-      RAMON_EASTER_EGG_DURATION_MS,
-    );
-
-    return () => window.clearTimeout(hideAnimation);
-  }, [ramonEatingTarget]);
 
   useEffect(() => {
     let ignoreResult = false;
@@ -130,6 +126,7 @@ export default function DailyEntryPage() {
       try {
         await writeEntry(selectedDate, habitId, entry);
       } catch (error) {
+        reactRamon("sleepy");
         if (error?.code === "BACKEND_UNAVAILABLE") {
           setContextStatus("stale");
           setContextError(error);
@@ -140,6 +137,7 @@ export default function DailyEntryPage() {
       }
 
       const refreshed = await refreshContextAfterWrite();
+      reactRamon("happy");
       return { refreshed };
     } finally {
       setSavingHabitId(null);
@@ -155,7 +153,7 @@ export default function DailyEntryPage() {
   }
 
   function greetRamon(target) {
-    if (ramonEatingTarget !== null) {
+    if (ramonReaction?.animation === "apple") {
       return;
     }
 
@@ -163,8 +161,20 @@ export default function DailyEntryPage() {
 
     if (ramonClickCount.current === RAMON_EASTER_EGG_CLICK_COUNT) {
       ramonClickCount.current = 0;
-      setRamonEatingTarget(target);
+      reactRamon("apple", target);
     }
+  }
+
+  function reactRamon(
+    animation,
+    target = ramonIsFollowing ? "companion" : "header",
+  ) {
+    ramonReactionId.current += 1;
+    setRamonReaction({ animation, target, id: ramonReactionId.current });
+  }
+
+  function completeRamonReaction(id) {
+    setRamonReaction((current) => (current?.id === id ? null : current));
   }
 
   const writeBlocked = contextStatus !== "ready" || savingHabitId !== null;
@@ -182,53 +192,62 @@ export default function DailyEntryPage() {
         </div>
         <button
           ref={ramonHeaderRef}
-          className={`ramon-trigger ramon-trigger--header ${
-            ramonEatingTarget === "header" ? "ramon-trigger--eating" : ""
-          }`}
+          className="ramon-trigger ramon-trigger--header"
           type="button"
           onClick={() => greetRamon("header")}
         >
-          <img
-            className="page-header__mascot"
-            src="/assets/ramon.png"
-            alt="Ramón, la mascota de Habit Tracker"
+          <Ramon
+            animation={
+              ramonReaction?.target === "header"
+                ? ramonReaction.animation
+                : "idle"
+            }
+            label="Ramón, la mascota de Habit Tracker"
+            playKey={
+              ramonReaction?.target === "header"
+                ? ramonReaction.id
+                : undefined
+            }
+            onComplete={
+              ramonReaction?.target === "header"
+                ? () => completeRamonReaction(ramonReaction.id)
+                : undefined
+            }
           />
-          {ramonEatingTarget === "header" && (
-            <span
-              className="ramon-easter-egg__sprite"
-              onAnimationEnd={() => setRamonEatingTarget(null)}
-              aria-hidden="true"
-            />
-          )}
         </button>
       </header>
 
       <button
         className={`ramon-trigger ramon-companion ${
           ramonIsFollowing ? "ramon-companion--visible" : ""
-        } ${
-          ramonEatingTarget === "companion" ? "ramon-trigger--eating" : ""
         }`}
         type="button"
         onClick={() => greetRamon("companion")}
         tabIndex="-1"
         aria-hidden="true"
       >
-        <img
-          className="ramon-companion__image"
-          src="/assets/ramon.png"
-          alt=""
+        <Ramon
+          animation={
+            ramonReaction?.target === "companion"
+              ? ramonReaction.animation
+              : ramonArrival
+                ? "walkLeft"
+                : "idle"
+          }
+          playKey={
+            ramonReaction?.target === "companion"
+              ? ramonReaction.id
+              : undefined
+          }
+          onComplete={
+            ramonReaction?.target === "companion"
+              ? () => completeRamonReaction(ramonReaction.id)
+              : () => setRamonArrival(false)
+          }
         />
-        {ramonEatingTarget === "companion" && (
-          <span
-            className="ramon-easter-egg__sprite"
-            onAnimationEnd={() => setRamonEatingTarget(null)}
-            aria-hidden="true"
-          />
-        )}
       </button>
 
-      {ramonEatingTarget !== null && (
+      {ramonReaction?.animation === "apple" && (
         <span
           className="ramon-easter-egg__status"
           role="status"
