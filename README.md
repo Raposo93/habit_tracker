@@ -89,6 +89,26 @@ If a save may have completed but the latest context cannot be reloaded, the page
 
 Previous dates can be selected for retrospective entry and correction. The same create, correction and confirmation rules apply.
 
+### Habit management workflow
+
+Use the navigation buttons to switch between `Registro diario` and `Hábitos`.
+The selected working date is preserved when returning to daily entry, and its
+context is reloaded to reflect habit changes.
+
+- Create a habit with a name and daily or weekly cadence. New habits are active.
+- Rename an existing habit with `Renombrar`, then save or cancel the edit.
+- Use `Desactivar` to hide a habit from daily entry while preserving its history.
+- Use `Reactivar` to restore the same habit to daily entry.
+- Active and inactive habits remain visible in the management catalog.
+
+The catalog reloads after each successful write. While saving, other writes and
+navigation are disabled. Validation errors keep the entered name. If a write
+result cannot be confirmed or the subsequent reload fails, reload the catalog
+before saving again.
+
+Cadence editing, permanent deletion, scoring guides and reordering are not part
+of this screen yet.
+
 ## CLI
 
 Import entries:

@@ -19,8 +19,8 @@ function todayAsApiDate() {
   return `${year}-${month}-${day}`;
 }
 
-export default function DailyEntryPage() {
-  const [selectedDate, setSelectedDate] = useState(todayAsApiDate);
+export default function DailyEntryPage({ initialDate, onDateChange, onSavingChange }) {
+  const [selectedDate, setSelectedDate] = useState(() => initialDate ?? todayAsApiDate());
   const [context, setContext] = useState(null);
   const [contextStatus, setContextStatus] = useState("loading");
   const [contextError, setContextError] = useState(null);
@@ -121,6 +121,7 @@ export default function DailyEntryPage() {
     }
 
     setSavingHabitId(habitId);
+    onSavingChange?.(true);
 
     try {
       try {
@@ -141,6 +142,7 @@ export default function DailyEntryPage() {
       return { refreshed };
     } finally {
       setSavingHabitId(null);
+      onSavingChange?.(false);
     }
   }
 
@@ -265,7 +267,10 @@ export default function DailyEntryPage() {
           <input
             type="date"
             value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
+            onChange={(event) => {
+              setSelectedDate(event.target.value);
+              onDateChange?.(event.target.value);
+            }}
             disabled={savingHabitId !== null}
             required
           />

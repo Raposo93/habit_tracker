@@ -496,3 +496,52 @@ textarea:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+
+.app-navigation {
+  display: flex;
+  gap: 0.5rem;
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding: 1rem 1rem 0;
+}
+
+.app-navigation button,
+.habit-actions button:not(.save-button) {
+  padding: 0.65rem 1rem;
+  border: 1px solid #aebeb8;
+  border-radius: 0.75rem;
+  background: #fffdfa;
+  color: #18312b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app-navigation button[aria-current="page"] {
+  background: #18312b;
+  color: #fff;
+}
+
+.habits-header { grid-template-columns: 1fr; }
+.create-habit { margin-bottom: 1rem; }
+.habit-management-form { display: grid; gap: 1rem; margin-top: 1rem; }
+.management-field { display: grid; gap: 0.45rem; font-weight: 700; }
+.management-field input,
+.management-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #aebeb8;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #18312b;
+  font: inherit;
+}
+.habit-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.habit-actions .save-button { width: auto; }
+.app-navigation button:disabled,
+.habit-actions button:disabled,
+.management-field select:disabled { opacity: 0.62; cursor: not-allowed; }
+.app-navigation button:focus-visible,
+.habit-actions button:focus-visible,
+.management-field input:focus-visible,
+.management-field select:focus-visible { outline: 3px solid #f2b84b; outline-offset: 2px; }
