@@ -4,7 +4,9 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,8 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.raposo.habittracker.application.CreateHabitUseCase;
 import com.raposo.habittracker.application.ListHabitsUseCase;
+import com.raposo.habittracker.application.SetHabitActiveUseCase;
 import com.raposo.habittracker.application.habit.CreateHabitInput;
 import com.raposo.habittracker.domain.Habit;
+import com.raposo.habittracker.domain.HabitId;
 
 @RestController
 @RequestMapping("/api/habits")
@@ -22,14 +26,17 @@ class HabitController {
     private final ListHabitsUseCase listHabitsUseCase;
     private final CreateHabitUseCase createHabitUseCase;
     private final HabitResponseMapper mapper;
+    private final SetHabitActiveUseCase setHabitActiveUseCase;
 
     HabitController(
             ListHabitsUseCase listHabitsUseCase,
             CreateHabitUseCase createHabitUseCase,
-            HabitResponseMapper mapper) {
+            HabitResponseMapper mapper,
+            SetHabitActiveUseCase setHabitActiveUseCase) {
         this.listHabitsUseCase = listHabitsUseCase;
         this.createHabitUseCase = createHabitUseCase;
         this.mapper = mapper;
+        this.setHabitActiveUseCase = setHabitActiveUseCase;
     }
 
     @GetMapping
@@ -47,5 +54,11 @@ class HabitController {
                 request.cadence()));
 
         return mapper.toResponse(habit);
+    }
+
+    @PutMapping("/{habitId}/active")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void setActive(@PathVariable String habitId, @RequestBody SetHabitActiveRequest request) {
+        setHabitActiveUseCase.execute(HabitId.of(habitId), request.active());
     }
 }

@@ -19,6 +19,24 @@ Version 0.4 introduces habit management without changing the identity model used
 - Reactivating a habit restores the same habit with the same `HabitId`.
 - Permanent deletion is not part of 0.4.
 
+## Active-state API
+
+`PUT /api/habits/{habitId}/active` sets the desired state with a JSON body:
+
+```json
+{"active": false}
+```
+
+Use `true` to reactivate the same habit. The operation returns `204 No Content`,
+including when the habit already has the requested state. An unknown identity
+returns `404` with code `HABIT_NOT_FOUND`. Missing, null or malformed state
+requests return `400` with code `INVALID_HABIT`.
+
+The operation changes only the active state. The full catalog still includes
+inactive habits, while subsequent Daily Entry context requests exclude them.
+Historical entries remain stored, and existing entry creation/correction API
+rules are unchanged.
+
 ## Google Sheets import compatibility
 
 The current Google Sheets import resolves habits by exact name.

@@ -48,6 +48,21 @@ public class SqliteHabitRepository implements HabitRepository {
     }
 
     @Override
+    public boolean setActive(HabitId habitId, boolean active) {
+        String sql = "UPDATE habits SET active = ? WHERE id = ?";
+
+        try (
+                Connection connection = connect();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, active ? 1 : 0);
+            statement.setString(2, habitId.value());
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to set habit active state", exception);
+        }
+    }
+
+    @Override
     public Optional<Habit> findById(HabitId id) {
         String sql = """
                 SELECT id, name, cadence, active

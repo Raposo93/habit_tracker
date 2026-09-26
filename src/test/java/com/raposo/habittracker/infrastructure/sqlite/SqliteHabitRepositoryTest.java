@@ -8,15 +8,20 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.raposo.habittracker.application.GetDailyEntryContextUseCase;
+import com.raposo.habittracker.application.ListHabitsUseCase;
+import com.raposo.habittracker.application.SetHabitActiveUseCase;
 import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitCadence;
 import com.raposo.habittracker.domain.HabitId;
+import com.raposo.habittracker.domain.StoredEntry;
 
 class SqliteHabitRepositoryTest {
 
@@ -88,6 +93,44 @@ class SqliteHabitRepositoryTest {
                 Habit.active(HabitId.of("exercise"), "Exercise", HabitCadence.DAILY)));
         assertTrue(result.contains(
                 Habit.inactive(HabitId.of("review"), "Review", HabitCadence.WEEKLY)));
+    }
+
+    @Test
+    void givenHabitWithHistoryWhenDeactivateAndReactivateThenPreserveDataAndRefreshContext() {
+        Path dbPath = initializedDatabase();
+        SqliteHabitRepository repository = new SqliteHabitRepository(dbPath);
+        SqliteHabitEntryRepository entries = new SqliteHabitEntryRepository(dbPath);
+        Habit habit = Habit.active(HabitId.of("sleep"), "Sleep", HabitCadence.WEEKLY);
+        LocalDate date = LocalDate.of(2026, 9, 2);
+        StoredEntry entry = new StoredEntry(0.0, "Tired");
+        assertTrue(repository.create(habit));
+        assertTrue(entries.createEntry(date, habit.id(), entry));
+        SetHabitActiveUseCase setActive = new SetHabitActiveUseCase(repository);
+        GetDailyEntryContextUseCase context = new GetDailyEntryContextUseCase(repository, entries);
+
+        assertEquals(1, context.execute(date).habits().size());
+        setActive.execute(habit.id(), false);
+        setActive.execute(habit.id(), false);
+
+        Habit inactive = Habit.inactive(habit.id(), habit.name(), habit.cadence());
+        assertEquals(List.of(inactive), new ListHabitsUseCase(repository).execute());
+        assertTrue(context.execute(date).habits().isEmpty());
+        assertEquals(Optional.of(entry), entries.findEntry(date, habit.id()));
+        assertEquals(Optional.of(inactive), new SqliteHabitRepository(dbPath).findById(habit.id()));
+
+        setActive.execute(habit.id(), true);
+        setActive.execute(habit.id(), true);
+
+        assertEquals(Optional.of(habit), new SqliteHabitRepository(dbPath).findById(habit.id()));
+        assertEquals(habit.id(), context.execute(date).habits().getFirst().habitId());
+        assertEquals(Optional.of(entry), context.execute(date).habits().getFirst().entry());
+    }
+
+    @Test
+    void givenMissingHabitWhenSetActiveThenDoNotCreateIt() {
+        SqliteHabitRepository repository = new SqliteHabitRepository(initializedDatabase());
+        assertFalse(repository.setActive(HabitId.of("missing"), true));
+        assertTrue(repository.findAll().isEmpty());
     }
 
     private Path initializedDatabase() {

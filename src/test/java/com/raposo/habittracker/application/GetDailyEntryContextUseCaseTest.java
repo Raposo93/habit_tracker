@@ -65,6 +65,11 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
+        public boolean setActive(HabitId habitId, boolean active) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public boolean create(Habit habit) {
             throw new UnsupportedOperationException();
         }

@@ -7,12 +7,15 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -20,6 +23,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.raposo.habittracker.application.CreateHabitUseCase;
 import com.raposo.habittracker.application.ListHabitsUseCase;
+import com.raposo.habittracker.application.SetHabitActiveUseCase;
+import com.raposo.habittracker.application.habit.HabitNotFoundException;
 import com.raposo.habittracker.application.habit.CreateHabitInput;
 import com.raposo.habittracker.application.habit.HabitNameAlreadyExistsException;
 import com.raposo.habittracker.application.habit.InvalidHabitCadenceException;
@@ -42,6 +47,9 @@ class HabitControllerTest {
 
     @MockitoBean
     private HabitResponseMapper mapper;
+
+    @MockitoBean
+    private SetHabitActiveUseCase setHabitActiveUseCase;
 
     @Test
     void givenFullCatalogWhenGetHabitsThenReturnActiveAndInactiveHabits() throws Exception {
@@ -185,5 +193,35 @@ class HabitControllerTest {
                 .andExpect(jsonPath("$.message").value("Habit request must contain valid JSON"));
 
         verifyNoInteractions(createHabitUseCase);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void givenDesiredStateWhenPutThenReturnNoContent(boolean active) throws Exception {
+        mockMvc.perform(put("/api/habits/sleep/active")
+                .contentType(APPLICATION_JSON)
+                .content("{\"active\":" + active + "}"))
+                .andExpect(status().isNoContent());
+        verify(setHabitActiveUseCase).execute(HabitId.of("sleep"), active);
+    }
+
+    @Test
+    void givenMissingHabitWhenPutThenReturnNotFound() throws Exception {
+        willThrow(new HabitNotFoundException(HabitId.of("missing")))
+                .given(setHabitActiveUseCase).execute(HabitId.of("missing"), false);
+        mockMvc.perform(put("/api/habits/missing/active")
+                .contentType(APPLICATION_JSON).content("{\"active\":false}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("HABIT_NOT_FOUND"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"active\":null}", "{", "{\"active\":[]}"})
+    void givenInvalidStateRequestWhenPutThenRejectWithoutWriting(String body) throws Exception {
+        mockMvc.perform(put("/api/habits/sleep/active")
+                .contentType(APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_HABIT"));
+        verifyNoInteractions(setHabitActiveUseCase);
     }
 }
