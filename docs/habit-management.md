@@ -1,4 +1,4 @@
-# Habit management rules for 0.4
+# Habit management in 0.4.0
 
 Version 0.4 introduces habit management without changing the identity model used by entries and reports.
 
@@ -18,6 +18,24 @@ Version 0.4 introduces habit management without changing the identity model used
 - Inactive habits do not appear in Daily Entry.
 - Reactivating a habit restores the same habit with the same `HabitId`.
 - Permanent deletion is not part of 0.4.
+
+## Catalog and creation API
+
+`GET /api/habits` returns `habits`, including active and inactive habits in the
+configured order. Each habit contains `habitId`, `habitName`, `cadence`, `active`
+and nullable `scoringGuide`.
+
+`POST /api/habits` creates an active habit with a server-generated identity:
+
+```json
+{"habitName": "Sleep", "cadence": "DAILY", "scoringGuide": "0: tired\n3: rested"}
+```
+
+`scoringGuide` is optional; cadences are `DAILY` or `WEEKLY`. Names are trimmed,
+nonblank and unique across active and inactive habits, using case-sensitive
+comparison. Success returns `201 Created` with the created habit. Invalid names
+or cadences return `400` (`INVALID_HABIT_NAME` or `INVALID_HABIT_CADENCE`);
+occupied names return `409` (`HABIT_NAME_ALREADY_EXISTS`).
 
 ## Active-state API
 
@@ -95,11 +113,9 @@ Report ordering remains unchanged.
 ## Responsibilities by layer
 
 - `domain`: preserve invariants that belong to `Habit` itself.
-- `application`: implement create, rename, activate and deactivate use cases.
+- `application`: implement create, rename, active-state, ordering and guide use cases.
 - `infrastructure`: persist habit state and enforce storage constraints such as unique names.
 - `web`: expose HTTP contracts, DTOs and presentation-facing errors.
-
-The concrete write operations are implemented in their dedicated 0.4 issues rather than as part of these rules.
 
 ## Scoring guides
 

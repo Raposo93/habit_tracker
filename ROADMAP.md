@@ -111,6 +111,12 @@ write safely.
 
 ## 0.4.0 — Habit management
 
+### Status
+
+Implemented and prepared for release. Optional free-text scoring guides are
+included. Google Sheets import has been retired; existing SQLite history remains
+available. See [0.4.0 release notes](CHANGELOG.md) for compatibility changes.
+
 ### Goal
 
 Manage the set of tracked habits from the application without editing SQLite

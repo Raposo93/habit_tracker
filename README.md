@@ -10,11 +10,14 @@ Ramón, the pixel-art ram above, is the project mascot.
 
 ## Current status
 
-The latest released version is 0.3.0. Current development adds habit management for 0.4.0 and retires Google Sheets import support.
+Version 0.4.0 adds habit management and optional scoring guides, and retires
+Google Sheets import support. The code and metadata are prepared for release;
+see [release notes](CHANGELOG.md).
 
 The application can:
 
 * create, rename, activate, deactivate and order habits from the browser
+* create, edit and remove optional scoring guides
 * store habit entries in SQLite
 * store habit entries internally by stable `habit_id`
 * query last week
@@ -69,6 +72,18 @@ npm run dev
 
 Open `http://localhost:5173`. The frontend development server proxies `/api` requests to the backend at `http://localhost:8080`.
 
+### Packaged application
+
+Build the application and run the packaged backend with its bundled frontend:
+
+```bash
+mvn verify
+java -jar target/habit-tracker-0.4.0.jar
+```
+
+Open `http://localhost:8080`. The packaged application uses `DB_PATH` just like
+the development backend and CLI.
+
 ### Entry and correction workflow
 
 1. Select the date to work on. The page loads the active habits and any entries already recorded for that date.
@@ -88,21 +103,32 @@ Use the navigation buttons to switch between `Registro diario` and `Hábitos`.
 The selected working date is preserved when returning to daily entry, and its
 context is reloaded to reflect habit changes.
 
-- Create a habit with a name and daily or weekly cadence. New habits are active.
+- Create a habit with a unique name, daily or weekly cadence and an optional
+  scoring guide. New habits are active; names are unique across active and
+  inactive habits.
 - Rename an existing habit with `Renombrar`, then save or cancel the edit.
 - Use `Desactivar` to hide a habit from daily entry while preserving its history.
 - Use `Reactivar` to restore the same habit to daily entry.
 - Active and inactive habits remain visible in the management catalog.
 - Use `Subir` and `Bajar` to set their order. Daily entry follows the same order,
   showing only active habits. New habits are appended to the end.
+- Use `Editar guía` to change a scoring guide, then save or cancel. Saving empty
+  text removes the guide. Guides preserve line breaks and do not validate scores.
 
 The catalog reloads after each successful write. While saving, other writes and
-navigation are disabled. Validation errors keep the entered name. If a write
+navigation are disabled. Validation errors keep the entered text. If a write
 result cannot be confirmed or the subsequent reload fails, reload the catalog
 before saving again.
 
-Cadence editing, permanent deletion and scoring guides are not part of this
-screen yet.
+Cadence editing and permanent deletion are not supported. See
+[habit management contracts](docs/habit-management.md) for API details.
+
+### Existing databases
+
+Startup automatically adds `display_order` and nullable `scoring_guide` columns
+when needed. The initial order preserves the previous alphabetical ordering;
+subsequent starts preserve the configured order. Existing identities, scores and
+notes remain intact. Habits without a guide continue to work.
 
 ## CLI
 
@@ -228,6 +254,13 @@ The report includes:
 
 The previous range is still shown as the full equivalent date range. However, report scoring ignores any previous-range days before tracking started.
 
+CLI tables use compact Markdown spacing.
+
+Scoring guides are free text reference notes. They preserve line breaks and do
+not validate scores or change report calculations. Reports expose the current
+guide for habits recorded in either compared period, including inactive habits.
+The CLI prints these guides after the report tables.
+
 ## Score scale
 
 ```text
@@ -277,7 +310,8 @@ DAILY
 WEEKLY
 ```
 
-Reports still display habit names, not internal ids.
+Report entries and summaries display current habit names. Report guide metadata
+also includes the stable habit identity.
 
 ## Development checks
 
@@ -289,16 +323,11 @@ Run the project verification script before committing:
 
 The script checks Git diffs for whitespace errors and unresolved conflict markers, then runs `mvn verify`.
 
-Scoring guides are free text reference notes. They preserve line breaks and do
-not validate scores or change report calculations. Reports expose the current
-guide for habits recorded in either compared period, including inactive habits.
-The CLI prints these guides after the report tables.
-
 ## Current limitations
 
-The browser supports habit creation, renaming, activation/deactivation and
-ordering, and optional scoring guides. Permanent deletion and cadence editing
-are not available. The CLI provides reports; habit management and entry/correction use
+The browser supports habit creation, renaming, activation/deactivation, ordering
+and optional scoring guides. Permanent deletion and cadence editing are not
+available. The CLI provides reports; habit management and entry/correction use
 the browser.
 
 Weekly review, frontend reporting and analysis remain future roadmap work.
