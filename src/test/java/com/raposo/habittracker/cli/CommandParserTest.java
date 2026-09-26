@@ -61,6 +61,7 @@ class CommandParserTest {
         assertTrue(output.contains("Tired"));
         assertTrue(output.contains(date.toString()));
         assertTrue(output.contains("0.00"));
+        assertTrue(output.contains("| Sleep | N/A | 0.00 | N/A | ∅ no baseline | 0 | 0 | 1 | 0 |"));
         assertFalse(output.contains("Scoring guides:"));
         assertTrue(entries.findEntry(date, habitId).isPresent());
     }
