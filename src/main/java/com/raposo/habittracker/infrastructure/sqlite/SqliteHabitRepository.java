@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.sqlite.SQLiteErrorCode;
+import org.sqlite.SQLiteException;
+
 import com.raposo.habittracker.application.port.HabitRepository;
 import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitCadence;
@@ -59,6 +62,25 @@ public class SqliteHabitRepository implements HabitRepository {
             return statement.executeUpdate() == 1;
         } catch (SQLException exception) {
             throw new IllegalStateException("Failed to set habit active state", exception);
+        }
+    }
+
+    @Override
+    public RenameResult rename(HabitId habitId, String name) {
+        String sql = "UPDATE habits SET name = ? WHERE id = ?";
+
+        try (
+                Connection connection = connect();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, name);
+            statement.setString(2, habitId.value());
+            return statement.executeUpdate() == 1 ? RenameResult.RENAMED : RenameResult.NOT_FOUND;
+        } catch (SQLException exception) {
+            if (exception instanceof SQLiteException sqliteException
+                    && sqliteException.getResultCode() == SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE) {
+                return RenameResult.NAME_ALREADY_EXISTS;
+            }
+            throw new IllegalStateException("Failed to rename habit", exception);
         }
     }
 

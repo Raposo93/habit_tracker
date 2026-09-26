@@ -16,8 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.raposo.habittracker.application.GetDailyEntryContextUseCase;
+import com.raposo.habittracker.application.GetHabitReportBetweenDatesUseCase;
 import com.raposo.habittracker.application.ListHabitsUseCase;
+import com.raposo.habittracker.application.RenameHabitUseCase;
 import com.raposo.habittracker.application.SetHabitActiveUseCase;
+import com.raposo.habittracker.application.port.HabitRepository.RenameResult;
+import com.raposo.habittracker.domain.DateRange;
 import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitCadence;
 import com.raposo.habittracker.domain.HabitId;
@@ -130,6 +134,70 @@ class SqliteHabitRepositoryTest {
     void givenMissingHabitWhenSetActiveThenDoNotCreateIt() {
         SqliteHabitRepository repository = new SqliteHabitRepository(initializedDatabase());
         assertFalse(repository.setActive(HabitId.of("missing"), true));
+        assertTrue(repository.findAll().isEmpty());
+    }
+
+    @Test
+    void givenHistoryWhenRenameThenPreserveIdentityAndShowCurrentNameInContextAndReports() {
+        Path dbPath = initializedDatabase();
+        SqliteHabitRepository repository = new SqliteHabitRepository(dbPath);
+        SqliteHabitEntryRepository entries = new SqliteHabitEntryRepository(dbPath);
+        Habit habit = Habit.active(HabitId.of("sleep"), "Sleep", HabitCadence.WEEKLY);
+        LocalDate date = LocalDate.of(2026, 9, 2);
+        StoredEntry entry = new StoredEntry(0.0, "Tired");
+        repository.create(habit);
+        entries.createEntry(date, habit.id(), entry);
+        entries.createEntry(date.minusDays(1), habit.id(), new StoredEntry(2.0, "Better"));
+
+        RenameHabitUseCase rename = new RenameHabitUseCase(repository);
+        rename.execute(habit.id(), "  Rest  ");
+        rename.execute(habit.id(), "Rest");
+
+        assertEquals(Optional.of(Habit.active(habit.id(), "Rest", habit.cadence())),
+                new SqliteHabitRepository(dbPath).findById(habit.id()));
+        assertTrue(repository.findByExactName("Sleep").isEmpty());
+        var context = new GetDailyEntryContextUseCase(repository, entries).execute(date);
+        assertEquals(habit.id(), context.habits().getFirst().habitId());
+        assertEquals("Rest", context.habits().getFirst().habitName());
+        assertEquals(Optional.of(entry), context.habits().getFirst().entry());
+        var report = new GetHabitReportBetweenDatesUseCase(entries).execute(DateRange.of(date, date));
+        assertEquals("Rest", report.entries().getFirst().habit());
+        assertEquals(0.0, report.entries().getFirst().score());
+        assertEquals("Tired", report.entries().getFirst().note());
+        assertEquals(1, report.summary().size());
+        assertEquals("Rest", report.summary().getFirst().habit());
+        assertEquals(2.0, report.summary().getFirst().previousPeriodScore());
+    }
+
+    @Test
+    void givenInactiveDuplicateNameWhenRenameThenRejectAndPreserveBothHabits() {
+        SqliteHabitRepository repository = new SqliteHabitRepository(initializedDatabase());
+        Habit source = Habit.active(HabitId.of("sleep"), "Sleep", HabitCadence.DAILY);
+        Habit target = Habit.inactive(HabitId.of("rest"), "Rest", HabitCadence.WEEKLY);
+        repository.create(source);
+        repository.create(target);
+
+        assertEquals(RenameResult.NAME_ALREADY_EXISTS, repository.rename(source.id(), "Rest"));
+        assertEquals(Optional.of(source), repository.findById(source.id()));
+        assertEquals(Optional.of(target), repository.findById(target.id()));
+        assertEquals(RenameResult.RENAMED, repository.rename(source.id(), "rest"));
+    }
+
+    @Test
+    void givenInactiveHabitWhenRenameThenPreserveInactiveState() {
+        SqliteHabitRepository repository = new SqliteHabitRepository(initializedDatabase());
+        Habit habit = Habit.inactive(HabitId.of("sleep"), "Sleep", HabitCadence.WEEKLY);
+        repository.create(habit);
+        assertEquals(RenameResult.RENAMED, repository.rename(habit.id(), "Rest"));
+        assertEquals(Optional.of(Habit.inactive(habit.id(), "Rest", habit.cadence())),
+                repository.findById(habit.id()));
+        assertTrue(repository.findActive().isEmpty());
+    }
+
+    @Test
+    void givenMissingHabitWhenRenameThenDoNotCreateIt() {
+        SqliteHabitRepository repository = new SqliteHabitRepository(initializedDatabase());
+        assertEquals(RenameResult.NOT_FOUND, repository.rename(HabitId.of("missing"), "Rest"));
         assertTrue(repository.findAll().isEmpty());
     }
 

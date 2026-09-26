@@ -12,6 +12,12 @@ public interface HabitRepository {
     /** Sets the desired state; returns false only when the habit does not exist. */
     boolean setActive(HabitId habitId, boolean active);
 
+    enum RenameResult {
+        RENAMED, NOT_FOUND, NAME_ALREADY_EXISTS
+    }
+
+    RenameResult rename(HabitId habitId, String name);
+
     Optional<Habit> findById(HabitId id);
 
     Optional<Habit> findByExactName(String name);

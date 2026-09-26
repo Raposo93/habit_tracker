@@ -65,6 +65,11 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
+        public RenameResult rename(HabitId habitId, String name) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public boolean setActive(HabitId habitId, boolean active) {
             throw new UnsupportedOperationException();
         }

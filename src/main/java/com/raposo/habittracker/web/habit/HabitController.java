@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.raposo.habittracker.application.CreateHabitUseCase;
 import com.raposo.habittracker.application.ListHabitsUseCase;
+import com.raposo.habittracker.application.RenameHabitUseCase;
 import com.raposo.habittracker.application.SetHabitActiveUseCase;
 import com.raposo.habittracker.application.habit.CreateHabitInput;
 import com.raposo.habittracker.domain.Habit;
@@ -27,16 +28,19 @@ class HabitController {
     private final CreateHabitUseCase createHabitUseCase;
     private final HabitResponseMapper mapper;
     private final SetHabitActiveUseCase setHabitActiveUseCase;
+    private final RenameHabitUseCase renameHabitUseCase;
 
     HabitController(
             ListHabitsUseCase listHabitsUseCase,
             CreateHabitUseCase createHabitUseCase,
             HabitResponseMapper mapper,
-            SetHabitActiveUseCase setHabitActiveUseCase) {
+            SetHabitActiveUseCase setHabitActiveUseCase,
+            RenameHabitUseCase renameHabitUseCase) {
         this.listHabitsUseCase = listHabitsUseCase;
         this.createHabitUseCase = createHabitUseCase;
         this.mapper = mapper;
         this.setHabitActiveUseCase = setHabitActiveUseCase;
+        this.renameHabitUseCase = renameHabitUseCase;
     }
 
     @GetMapping
@@ -60,5 +64,11 @@ class HabitController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void setActive(@PathVariable String habitId, @RequestBody SetHabitActiveRequest request) {
         setHabitActiveUseCase.execute(HabitId.of(habitId), request.active());
+    }
+
+    @PutMapping("/{habitId}/name")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void rename(@PathVariable String habitId, @RequestBody RenameHabitRequest request) {
+        renameHabitUseCase.execute(HabitId.of(habitId), request.habitName());
     }
 }

@@ -37,13 +37,30 @@ inactive habits, while subsequent Daily Entry context requests exclude them.
 Historical entries remain stored, and existing entry creation/correction API
 rules are unchanged.
 
-## Google Sheets import compatibility
+## Rename API
 
-The current Google Sheets import resolves habits by exact name.
+`PUT /api/habits/{habitId}/name` changes the current display name:
 
-After renaming a habit, future imports require the corresponding habit name in Sheets to match the new current name.
+```json
+{"habitName": "Rest"}
+```
 
-Version 0.4 does not introduce name aliases, historical names or automatic Sheets header migration.
+Names are trimmed and must not be null or blank. Names remain unique across
+active and inactive habits, with the existing case-sensitive comparison.
+Renaming to the same name succeeds.
+
+The operation returns `204 No Content`. Invalid names return `400` with code
+`INVALID_HABIT_NAME`; unknown identities return `404` with `HABIT_NOT_FOUND`;
+occupied names return `409` with `HABIT_NAME_ALREADY_EXISTS`. Malformed JSON
+returns `400` with `INVALID_HABIT`.
+
+Renaming preserves identity, cadence, active state and historical scores and
+notes. Subsequent Daily Entry context and report queries use the new name,
+including for historical entries. No historical display names or aliases are
+stored.
+
+Google Sheets compatibility is no longer a supported product requirement.
+Removal of the remaining import implementation is tracked separately in #27.
 
 ## Responsibilities by layer
 

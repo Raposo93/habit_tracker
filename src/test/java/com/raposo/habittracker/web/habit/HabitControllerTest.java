@@ -23,10 +23,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.raposo.habittracker.application.CreateHabitUseCase;
 import com.raposo.habittracker.application.ListHabitsUseCase;
+import com.raposo.habittracker.application.RenameHabitUseCase;
 import com.raposo.habittracker.application.SetHabitActiveUseCase;
-import com.raposo.habittracker.application.habit.HabitNotFoundException;
 import com.raposo.habittracker.application.habit.CreateHabitInput;
 import com.raposo.habittracker.application.habit.HabitNameAlreadyExistsException;
+import com.raposo.habittracker.application.habit.HabitNotFoundException;
 import com.raposo.habittracker.application.habit.InvalidHabitCadenceException;
 import com.raposo.habittracker.application.habit.InvalidHabitNameException;
 import com.raposo.habittracker.domain.Habit;
@@ -50,6 +51,9 @@ class HabitControllerTest {
 
     @MockitoBean
     private SetHabitActiveUseCase setHabitActiveUseCase;
+
+    @MockitoBean
+    private RenameHabitUseCase renameHabitUseCase;
 
     @Test
     void givenFullCatalogWhenGetHabitsThenReturnActiveAndInactiveHabits() throws Exception {
@@ -223,5 +227,55 @@ class HabitControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_HABIT"));
         verifyNoInteractions(setHabitActiveUseCase);
+    }
+
+    @Test
+    void givenNewNameWhenPutThenRenameAndReturnNoContent() throws Exception {
+        mockMvc.perform(put("/api/habits/sleep/name")
+                .contentType(APPLICATION_JSON).content("{\"habitName\":\"Rest\"}"))
+                .andExpect(status().isNoContent());
+        verify(renameHabitUseCase).execute(HabitId.of("sleep"), "Rest");
+    }
+
+    @Test
+    void givenMissingHabitWhenRenameThenReturnStableNotFound() throws Exception {
+        willThrow(new HabitNotFoundException(HabitId.of("missing")))
+                .given(renameHabitUseCase).execute(HabitId.of("missing"), "Rest");
+        mockMvc.perform(put("/api/habits/missing/name")
+                .contentType(APPLICATION_JSON).content("{\"habitName\":\"Rest\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("HABIT_NOT_FOUND"));
+    }
+
+    @Test
+    void givenDuplicateNameWhenRenameThenReturnStableConflict() throws Exception {
+        willThrow(new HabitNameAlreadyExistsException("Rest"))
+                .given(renameHabitUseCase).execute(HabitId.of("sleep"), "Rest");
+        mockMvc.perform(put("/api/habits/sleep/name")
+                .contentType(APPLICATION_JSON).content("{\"habitName\":\"Rest\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("HABIT_NAME_ALREADY_EXISTS"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"habitName\":null}", "{\"habitName\":\"\"}", "{\"habitName\":\"  \"}"})
+    void givenBlankNameWhenRenameThenReturnStableInvalidName(String body) throws Exception {
+        willThrow(new InvalidHabitNameException()).given(renameHabitUseCase)
+                .execute(org.mockito.ArgumentMatchers.eq(HabitId.of("sleep")),
+                        org.mockito.ArgumentMatchers.any());
+        mockMvc.perform(put("/api/habits/sleep/name")
+                .contentType(APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_HABIT_NAME"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{", "{\"habitName\":[]}"})
+    void givenMalformedRenameRequestWhenPutThenRejectWithoutCallingUseCase(String body) throws Exception {
+        mockMvc.perform(put("/api/habits/sleep/name")
+                .contentType(APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_HABIT"));
+        verifyNoInteractions(renameHabitUseCase);
     }
 }
