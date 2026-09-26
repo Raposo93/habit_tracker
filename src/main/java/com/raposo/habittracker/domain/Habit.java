@@ -3,7 +3,8 @@ package com.raposo.habittracker.domain;
 public record Habit(HabitId id,
         String name,
         HabitCadence cadence,
-        boolean active) {
+        boolean active,
+        String scoringGuide) {
 
     public Habit {
         if (id == null) {
@@ -17,6 +18,15 @@ public record Habit(HabitId id,
         }
 
         name = name.trim();
+        scoringGuide = normalizeScoringGuide(scoringGuide);
+    }
+
+    public Habit(HabitId id, String name, HabitCadence cadence, boolean active) {
+        this(id, name, cadence, active, null);
+    }
+
+    public static String normalizeScoringGuide(String guide) {
+        return guide == null || guide.isBlank() ? null : guide;
     }
 
     public static Habit active(HabitId id, String name, HabitCadence cadence) {

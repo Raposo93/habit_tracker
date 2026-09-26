@@ -100,3 +100,30 @@ Report ordering remains unchanged.
 - `web`: expose HTTP contracts, DTOs and presentation-facing errors.
 
 The concrete write operations are implemented in their dedicated 0.4 issues rather than as part of these rules.
+
+## Scoring guides
+
+Creation accepts optional `scoringGuide` text; the catalog and creation response
+include it as a string or `null`. Existing databases gain a nullable
+`scoring_guide` column automatically without changing history or habit order.
+
+`PUT /api/habits/{habitId}/scoring-guide` edits only the guide:
+
+```json
+{"scoringGuide": "0: no activity\n3: target completed"}
+```
+
+The field is required for this update, but `null`, empty or whitespace-only text
+removes the guide. Nonblank text is preserved exactly, including line breaks.
+Success returns `204`; unknown identities return `404` (`HABIT_NOT_FOUND`), and
+missing fields or malformed requests return `400` (`INVALID_HABIT`).
+
+The browser supports creation, editing, cancellation and removal of guides.
+They are reference text only: fractional scores remain valid and no scoring
+rules are inferred from the text. Renaming and activation preserve the guide.
+
+Report JSON includes `scoringGuides`, each with `habitId`, `habitName` and
+`scoringGuide`, for habits recorded in the current or previous period. Inactive
+historical habits are included; habits outside those periods are excluded. Each
+habit appears once, using its current name and guide. Guides are not versioned.
+The CLI adds a section after its tables only when relevant guides exist.

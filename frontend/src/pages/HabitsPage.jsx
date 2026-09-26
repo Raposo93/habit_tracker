@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive } from "../api/habits.js";
+import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive, setHabitScoringGuide } from "../api/habits.js";
 
 function errorMessage(error) {
   switch (error?.code) {
@@ -95,7 +95,7 @@ export default function HabitsPage({ onSavingChange }) {
       <section className="habit-card create-habit" aria-label="Crear hábito">
         <h2>Nuevo hábito</h2>
         <HabitForm blocked={blocked} saving={saving === "create"}
-          onSave={(name, cadence) => save("create", () => createHabit({ habitName: name, cadence }))} />
+          onSave={(name, cadence, scoringGuide) => save("create", () => createHabit({ habitName: name, cadence, scoringGuide }))} />
       </section>
       {habits?.length === 0 && <p className="empty-state">Todavía no hay hábitos. Crea el primero.</p>}
       <section className="habit-grid" aria-label="Catálogo de hábitos">
@@ -103,6 +103,7 @@ export default function HabitsPage({ onSavingChange }) {
           first={index === 0} last={index === habits.length - 1}
           onMove={(direction) => moveHabit(index, direction)}
           saving={saving === habit.habitId}
+          onSetScoringGuide={(guide) => save(habit.habitId, () => setHabitScoringGuide(habit.habitId, guide))}
           onRename={(name) => save(habit.habitId, () => renameHabit(habit.habitId, name))}
           onSetActive={() => save(habit.habitId, () => setHabitActive(habit.habitId, !habit.active))} />)}
       </section>
@@ -112,6 +113,7 @@ export default function HabitsPage({ onSavingChange }) {
 
 function HabitForm({ habit, blocked, saving, onSave, onCancel }) {
   const [name, setName] = useState(habit?.habitName ?? "");
+  const [scoringGuide, setScoringGuide] = useState("");
   const [cadence, setCadence] = useState("DAILY");
   const [feedback, setFeedback] = useState(null);
   async function submit(event) {
@@ -119,9 +121,9 @@ function HabitForm({ habit, blocked, saving, onSave, onCancel }) {
     if (blocked) return;
     setFeedback(null);
     try {
-      if (await onSave(name, cadence)) {
+      if (await onSave(name, cadence, scoringGuide)) {
         if (habit) onCancel();
-        else { setName(""); setFeedback({ message: "Hábito creado.", error: false }); }
+        else { setName(""); setScoringGuide(""); setFeedback({ message: "Hábito creado.", error: false }); }
       }
     } catch (error) {
       setFeedback({ message: errorMessage(error), error: true });
@@ -136,6 +138,9 @@ function HabitForm({ habit, blocked, saving, onSave, onCancel }) {
         <option value="DAILY">Diaria</option><option value="WEEKLY">Semanal</option>
       </select>
     </label>}
+    {!habit && <label className="management-field">Guía de puntuación (opcional)
+      <textarea rows={4} value={scoringGuide} onChange={(event) => setScoringGuide(event.target.value)} disabled={blocked} />
+    </label>}
     <div className="habit-actions">
       <button className="save-button" disabled={blocked} type="submit">{saving ? "Guardando…" : habit ? "Guardar nombre" : "Crear hábito"}</button>
       {habit && <button type="button" onClick={onCancel} disabled={saving}>Cancelar</button>}
@@ -144,8 +149,9 @@ function HabitForm({ habit, blocked, saving, onSave, onCancel }) {
   </form>;
 }
 
-function HabitCard({ habit, blocked, saving, onRename, onSetActive, first, last, onMove }) {
+function HabitCard({ habit, blocked, saving, onRename, onSetActive, onSetScoringGuide, first, last, onMove }) {
   const [editing, setEditing] = useState(false);
+  const [editingGuide, setEditingGuide] = useState(false);
   const [feedback, setFeedback] = useState(null);
   async function changeActive() {
     if (blocked) return;
@@ -165,15 +171,41 @@ function HabitCard({ habit, blocked, saving, onRename, onSetActive, first, last,
     <div className="habit-card__header"><h2>{habit.habitName}</h2>
       <span className={habit.active ? "entry-badge" : "entry-badge entry-badge--empty"}>{habit.active ? "Activo" : "Inactivo"}</span></div>
     <p>{habit.cadence === "DAILY" ? "Diaria" : "Semanal"}</p>
-    {editing ? <HabitForm habit={habit} blocked={blocked} saving={saving} onSave={onRename} onCancel={() => setEditing(false)} /> :
+    {habit.scoringGuide && <p className="scoring-guide">{habit.scoringGuide}</p>}
+    {editingGuide ? <ScoringGuideForm habit={habit} blocked={blocked} saving={saving} onSave={onSetScoringGuide} onCancel={() => setEditingGuide(false)} /> : editing ? <HabitForm habit={habit} blocked={blocked} saving={saving} onSave={onRename} onCancel={() => setEditing(false)} /> :
       <div className="habit-actions">
         <button type="button" disabled={blocked} onClick={() => { setEditing(true); setFeedback(null); }}>Renombrar</button>
+        <button type="button" disabled={blocked} onClick={() => { setEditingGuide(true); setFeedback(null); }}>Editar guía</button>
         <button type="button" disabled={blocked} onClick={changeActive}>{saving ? "Guardando…" : habit.active ? "Desactivar" : "Reactivar"}</button>
       </div>}
     <div className="habit-actions habit-order-actions" aria-label="Orden del hábito">
-      <button type="button" disabled={blocked || editing || first} onClick={() => move(-1)}>Subir</button>
-      <button type="button" disabled={blocked || editing || last} onClick={() => move(1)}>Bajar</button>
+      <button type="button" disabled={blocked || editing || editingGuide || first} onClick={() => move(-1)}>Subir</button>
+      <button type="button" disabled={blocked || editing || editingGuide || last} onClick={() => move(1)}>Bajar</button>
     </div>
     {feedback && <p className={`entry-feedback${feedback.error ? " entry-feedback--error" : ""}`} role={feedback.error ? "alert" : "status"}>{feedback.message}</p>}
   </article>;
+}
+
+function ScoringGuideForm({ habit, blocked, saving, onSave, onCancel }) {
+  const [guide, setGuide] = useState(habit.scoringGuide ?? "");
+  const [problem, setProblem] = useState(null);
+  async function submit(event) {
+    event.preventDefault();
+    if (blocked) return;
+    setProblem(null);
+    try {
+      if (await onSave(guide)) onCancel();
+    } catch (error) { setProblem(errorMessage(error)); }
+  }
+  return <form className="habit-management-form" onSubmit={submit}>
+    <label className="management-field">Guía de puntuación
+      <textarea rows={4} value={guide} onChange={(event) => setGuide(event.target.value)} disabled={blocked} />
+    </label>
+    <p>Texto de referencia para puntuar. Déjalo vacío para eliminar la guía.</p>
+    <div className="habit-actions">
+      <button className="save-button" type="submit" disabled={blocked}>{saving ? "Guardando…" : "Guardar guía"}</button>
+      <button type="button" disabled={saving} onClick={onCancel}>Cancelar</button>
+    </div>
+    {problem && <p className="entry-feedback entry-feedback--error" role="alert">{problem}</p>}
+  </form>;
 }

@@ -8,7 +8,15 @@ public record ReportResponse(
         ReportRangeResponse currentRange,
         ReportRangeResponse previousRange,
         List<HabitSummaryResponse> summary,
-        List<EntryResponse> entries) {
+        List<EntryResponse> entries,
+        List<ScoringGuideResponse> scoringGuides) {
+    public ReportResponse(ReportContextResponse context, ReportRangeResponse currentRange,
+            ReportRangeResponse previousRange, List<HabitSummaryResponse> summary, List<EntryResponse> entries) {
+        this(context, currentRange, previousRange, summary, entries, List.of());
+    }
+
+    public record ScoringGuideResponse(String habitId, String habitName, String scoringGuide) {
+    }
 
     public record ReportContextResponse(
             String scoreScale) {

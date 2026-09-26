@@ -21,6 +21,8 @@ public interface HabitRepository {
     /** Reorders the complete catalog atomically; false means the catalog does not match. */
     boolean reorder(List<HabitId> habitIds);
 
+    boolean setScoringGuide(HabitId habitId, String scoringGuide);
+
     Optional<Habit> findById(HabitId id);
 
     List<Habit> findActive();

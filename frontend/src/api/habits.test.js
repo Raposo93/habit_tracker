@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive } from "./habits.js";
+import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive, setHabitScoringGuide } from "./habits.js";
 afterEach(() => vi.unstubAllGlobals());
 
 it("loads the full catalog", async () => {
@@ -45,4 +45,15 @@ it("sends the complete habit order and accepts no-content responses", async () =
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ habitIds: ["inactive", "active"] }),
   });
+});
+
+it("writes guide text and explicit removal without reading a no-content response", async () => {
+  const fetch = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+  vi.stubGlobal("fetch", fetch);
+  await setHabitScoringGuide("a/b", "0: none\n3: enough");
+  await setHabitScoringGuide("a/b", null);
+  expect(fetch.mock.calls.map(([url, options]) => [url, JSON.parse(options.body)])).toEqual([
+    ["/api/habits/a%2Fb/scoring-guide", { scoringGuide: "0: none\n3: enough" }],
+    ["/api/habits/a%2Fb/scoring-guide", { scoringGuide: null }],
+  ]);
 });

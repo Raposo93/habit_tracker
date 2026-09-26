@@ -1,10 +1,10 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
-import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive } from "../api/habits.js";
+import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive, setHabitScoringGuide } from "../api/habits.js";
 import HabitsPage from "./HabitsPage.jsx";
 
-vi.mock("../api/habits.js", () => ({ createHabit: vi.fn(), loadHabits: vi.fn(), renameHabit: vi.fn(), reorderHabits: vi.fn(), setHabitActive: vi.fn() }));
+vi.mock("../api/habits.js", () => ({ createHabit: vi.fn(), loadHabits: vi.fn(), renameHabit: vi.fn(), reorderHabits: vi.fn(), setHabitScoringGuide: vi.fn(), setHabitActive: vi.fn() }));
 const sleep = { habitId: "stable-sleep", habitName: "Sleep", cadence: "DAILY", active: true };
 const review = { habitId: "stable-review", habitName: "Review", cadence: "WEEKLY", active: false };
 function deferred() { let resolve; const promise = new Promise((done) => { resolve = done; }); return { promise, resolve }; }
@@ -51,7 +51,7 @@ it("creates a weekly habit, refreshes from the server and resets its name", asyn
   await userEvent.type(creator().getByLabelText("Nombre"), "Walk");
   await userEvent.selectOptions(creator().getByLabelText("Cadencia"), "WEEKLY");
   await userEvent.click(creator().getByRole("button", { name: "Crear hábito" }));
-  expect(createHabit).toHaveBeenCalledWith({ habitName: "Walk", cadence: "WEEKLY" });
+  expect(createHabit).toHaveBeenCalledWith({ habitName: "Walk", cadence: "WEEKLY", scoringGuide: "" });
   expect(await screen.findByRole("heading", { name: "Walk" })).toBeVisible();
   expect(creator().getByLabelText("Nombre")).toHaveValue("");
 });
@@ -162,4 +162,46 @@ it("requires a catalog reload after a reorder conflict without changing the visi
   loadHabits.mockResolvedValue([review, sleep]);
   await userEvent.click(screen.getByRole("button", { name: "Recargar catálogo" }));
   expect(card("Sleep").getByRole("button", { name: "Subir" })).toBeEnabled();
+});
+
+it("creates a guide with multiline text and clears it after success", async () => {
+  await ready();
+  await userEvent.type(creator().getByLabelText("Nombre"), "Walk");
+  await userEvent.type(creator().getByLabelText("Guía de puntuación (opcional)"), "0: none\n3: long walk");
+  await userEvent.click(creator().getByRole("button", { name: "Crear hábito" }));
+  expect(createHabit).toHaveBeenCalledWith({ habitName: "Walk", cadence: "DAILY", scoringGuide: "0: none\n3: long walk" });
+  expect(creator().getByLabelText("Guía de puntuación (opcional)")).toHaveValue("");
+});
+
+it("edits, cancels and removes a guide using stable identity", async () => {
+  loadHabits.mockResolvedValue([{ ...sleep, scoringGuide: "0: tired\n3: rested" }]);
+  await ready();
+  expect(card("Sleep").getByText(/0: tired/)).toHaveTextContent("3: rested");
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Editar guía" }));
+  await userEvent.clear(card("Sleep").getByLabelText("Guía de puntuación"));
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Cancelar" }));
+  expect(setHabitScoringGuide).not.toHaveBeenCalled();
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Editar guía" }));
+  expect(card("Sleep").getByLabelText("Guía de puntuación")).toHaveValue("0: tired\n3: rested");
+  await userEvent.clear(card("Sleep").getByLabelText("Guía de puntuación"));
+  await userEvent.type(card("Sleep").getByLabelText("Guía de puntuación"), "Updated\nguide");
+  loadHabits.mockResolvedValue([{ ...sleep, scoringGuide: "Updated\nguide" }]);
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Guardar guía" }));
+  expect(setHabitScoringGuide).toHaveBeenLastCalledWith("stable-sleep", "Updated\nguide");
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Editar guía" }));
+  await userEvent.clear(card("Sleep").getByLabelText("Guía de puntuación"));
+  loadHabits.mockResolvedValue([sleep]);
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Guardar guía" }));
+  expect(setHabitScoringGuide).toHaveBeenLastCalledWith("stable-sleep", "");
+});
+
+it("preserves guide text and blocks writes after an uncertain save", async () => {
+  await ready();
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Editar guía" }));
+  await userEvent.type(card("Sleep").getByLabelText("Guía de puntuación"), "Keep\nthis");
+  setHabitScoringGuide.mockRejectedValue({ code: "BACKEND_UNAVAILABLE" });
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Guardar guía" }));
+  expect(card("Sleep").getByLabelText("Guía de puntuación")).toHaveValue("Keep\nthis");
+  expect(card("Sleep").getByRole("button", { name: "Guardar guía" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Recargar catálogo" })).toBeEnabled();
 });

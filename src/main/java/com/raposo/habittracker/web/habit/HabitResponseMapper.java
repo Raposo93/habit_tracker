@@ -18,6 +18,7 @@ public class HabitResponseMapper {
                 habit.id().value(),
                 habit.name(),
                 habit.cadence().name(),
-                habit.active());
+                habit.active(),
+                habit.scoringGuide());
     }
 }

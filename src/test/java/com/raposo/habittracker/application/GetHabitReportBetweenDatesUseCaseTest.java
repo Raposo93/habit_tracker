@@ -12,6 +12,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.application.report.HabitScoringGuide;
 import com.raposo.habittracker.application.report.HabitReport;
 import com.raposo.habittracker.application.report.HabitSummaryRow;
 import com.raposo.habittracker.domain.DateRange;
@@ -111,6 +112,12 @@ class GetHabitReportBetweenDatesUseCaseTest {
         @Override
         public boolean updateEntry(LocalDate date, HabitId habitId, StoredEntry entry) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<HabitScoringGuide> findScoringGuidesBetweenDates(
+                LocalDate startDate, LocalDate endDate) {
+            return List.of();
         }
 
         @Override

@@ -25,7 +25,7 @@ public class CreateHabitUseCase {
 
         String name = validateName(input.name());
         HabitCadence cadence = parseCadence(input.cadence());
-        Habit habit = Habit.active(HabitId.generate(), name, cadence);
+        Habit habit = new Habit(HabitId.generate(), name, cadence, true, input.scoringGuide());
 
         if (!habitRepository.create(habit)) {
             throw new HabitNameAlreadyExistsException(name);

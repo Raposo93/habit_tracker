@@ -26,6 +26,7 @@ import com.raposo.habittracker.application.ListHabitsUseCase;
 import com.raposo.habittracker.application.RenameHabitUseCase;
 import com.raposo.habittracker.application.ReorderHabitsUseCase;
 import com.raposo.habittracker.application.SetHabitActiveUseCase;
+import com.raposo.habittracker.application.SetHabitScoringGuideUseCase;
 import com.raposo.habittracker.application.habit.CreateHabitInput;
 import com.raposo.habittracker.application.habit.HabitCatalogChangedException;
 import com.raposo.habittracker.application.habit.HabitNameAlreadyExistsException;
@@ -60,6 +61,9 @@ class HabitControllerTest {
 
     @MockitoBean
     private ReorderHabitsUseCase reorderHabitsUseCase;
+
+    @MockitoBean
+    private SetHabitScoringGuideUseCase setHabitScoringGuideUseCase;
 
     @Test
     void givenFullCatalogWhenGetHabitsThenReturnActiveAndInactiveHabits() throws Exception {

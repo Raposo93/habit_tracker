@@ -55,3 +55,7 @@ export async function setHabitActive(habitId, active) {
 export async function reorderHabits(habitIds) {
   await write(`${HABITS_URL}/order`, "PUT", { habitIds });
 }
+
+export async function setHabitScoringGuide(habitId, scoringGuide) {
+  await write(`${HABITS_URL}/${encodeURIComponent(habitId)}/scoring-guide`, "PUT", { scoringGuide });
+}

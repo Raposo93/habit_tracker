@@ -61,6 +61,7 @@ class CommandParserTest {
         assertTrue(output.contains("Tired"));
         assertTrue(output.contains(date.toString()));
         assertTrue(output.contains("0.00"));
+        assertFalse(output.contains("Scoring guides:"));
         assertTrue(entries.findEntry(date, habitId).isPresent());
     }
 
@@ -75,6 +76,17 @@ class CommandParserTest {
         assertTrue(output.contains("Sleep"));
         assertTrue(output.contains("Rested"));
         assertTrue(output.contains("2.50"));
+    }
+
+    @Test
+    void printsMultilineGuideAfterTablesWithoutChangingScores() {
+        new SqliteHabitRepository(tempDir.resolve("habits.db")).setScoringGuide(habitId, "0: tired\n3: rested");
+        entries.createEntry(LocalDate.of(2026, 9, 2), habitId, new StoredEntry(1.5, null));
+        String output = execute(CommandParser.parse(
+                new String[] { "--query-between-dates", "2026-09-02", "2026-09-02" }, entries));
+        assertTrue(output.contains("1.50"));
+        assertTrue(output.contains("Scoring guides:\n\nSleep\n0: tired\n3: rested\n"));
+        assertTrue(output.indexOf("Scoring guides:") > output.indexOf("Summary:"));
     }
 
     private String execute(Command command) {

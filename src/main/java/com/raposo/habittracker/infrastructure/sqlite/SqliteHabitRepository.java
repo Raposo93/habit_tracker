@@ -31,8 +31,8 @@ public class SqliteHabitRepository implements HabitRepository {
     @Override
     public boolean create(Habit habit) {
         String sql = """
-                INSERT INTO habits (id, name, cadence, active, display_order)
-                VALUES (?, ?, ?, ?, (SELECT COALESCE(MAX(display_order), -1) + 1 FROM habits))
+                INSERT INTO habits (id, name, cadence, active, scoring_guide, display_order)
+                VALUES (?, ?, ?, ?, ?, (SELECT COALESCE(MAX(display_order), -1) + 1 FROM habits))
                 ON CONFLICT(name) DO NOTHING
                 """;
 
@@ -44,6 +44,7 @@ public class SqliteHabitRepository implements HabitRepository {
             statement.setString(2, habit.name());
             statement.setString(3, habit.cadence().name());
             statement.setInt(4, habit.active() ? 1 : 0);
+            statement.setString(5, habit.scoringGuide());
 
             return statement.executeUpdate() == 1;
 
@@ -127,9 +128,21 @@ public class SqliteHabitRepository implements HabitRepository {
     }
 
     @Override
+    public boolean setScoringGuide(HabitId habitId, String scoringGuide) {
+        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(
+                "UPDATE habits SET scoring_guide = ? WHERE id = ?")) {
+            statement.setString(1, scoringGuide);
+            statement.setString(2, habitId.value());
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to set habit scoring guide", exception);
+        }
+    }
+
+    @Override
     public Optional<Habit> findById(HabitId id) {
         String sql = """
-                SELECT id, name, cadence, active
+                SELECT id, name, cadence, active, scoring_guide
                 FROM habits
                 WHERE id = ?
                 """;
@@ -156,7 +169,7 @@ public class SqliteHabitRepository implements HabitRepository {
     @Override
     public List<Habit> findActive() {
         String sql = """
-                SELECT id, name, cadence, active
+                SELECT id, name, cadence, active, scoring_guide
                 FROM habits
                 WHERE active = 1
                 ORDER BY display_order, id
@@ -168,7 +181,7 @@ public class SqliteHabitRepository implements HabitRepository {
     @Override
     public List<Habit> findAll() {
         String sql = """
-                SELECT id, name, cadence, active
+                SELECT id, name, cadence, active, scoring_guide
                 FROM habits
                 ORDER BY display_order, id
                 """;
@@ -200,7 +213,8 @@ public class SqliteHabitRepository implements HabitRepository {
                 HabitId.of(resultSet.getString("id")),
                 resultSet.getString("name"),
                 HabitCadence.valueOf(resultSet.getString("cadence").toUpperCase(Locale.ROOT)),
-                resultSet.getInt("active") == 1);
+                resultSet.getInt("active") == 1,
+                resultSet.getString("scoring_guide"));
     }
 
     private Connection connect() throws SQLException {

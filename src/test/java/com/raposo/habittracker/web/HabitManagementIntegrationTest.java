@@ -202,6 +202,53 @@ class HabitManagementIntegrationTest {
                 .andExpect(jsonPath("$.code").value("HABIT_CATALOG_CHANGED"));
     }
 
+    @Test
+    void scoringGuidesAreOptionalMetadataForCurrentAndPreviousHistoricalHabits() throws Exception {
+        String guide = "0: tired\n3: rested";
+        String response = mockMvc.perform(post("/api/habits").contentType(APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(Map.of(
+                        "habitName", "Sleep", "cadence", "DAILY", "scoringGuide", guide))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.scoringGuide").value(guide))
+                .andReturn().getResponse().getContentAsString();
+        String id = new ObjectMapper().readTree(response).get("habitId").asString();
+        createEntry(id, "2026-09-01", "{\"score\":1.5,\"note\":\"Between guide labels\"}");
+        createEntry(id, "2026-09-02", "{\"score\":0,\"note\":null}");
+        setActive(id, false);
+        mockMvc.perform(put("/api/habits/{id}/name", id).contentType(APPLICATION_JSON)
+                .content("{\"habitName\":\"Rest\"}")).andExpect(status().isNoContent());
+        report("2026-09-02", "2026-09-02")
+                .andExpect(jsonPath("$.scoringGuides.length()").value(1))
+                .andExpect(jsonPath("$.scoringGuides[0].habitId").value(id))
+                .andExpect(jsonPath("$.scoringGuides[0].habitName").value("Rest"))
+                .andExpect(jsonPath("$.scoringGuides[0].scoringGuide").value(guide))
+                .andExpect(jsonPath("$.summary[0].previousPeriodScore").value(1.5));
+        report("2026-09-04", "2026-09-04").andExpect(jsonPath("$.scoringGuides").isEmpty());
+        String updated = "Updated\nmultiline";
+        mockMvc.perform(put("/api/habits/{id}/scoring-guide", id).contentType(APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(Map.of("scoringGuide", updated))))
+                .andExpect(status().isNoContent());
+        report("2026-09-01", "2026-09-01")
+                .andExpect(jsonPath("$.scoringGuides[0].scoringGuide").value(updated))
+                .andExpect(jsonPath("$.entries[0].score").value(1.5))
+                .andExpect(jsonPath("$.entries[0].note").value("Between guide labels"));
+        for (String body : java.util.List.of("{\"scoringGuide\":null}", "{\"scoringGuide\":\" \\n \"}")) {
+            mockMvc.perform(put("/api/habits/{id}/scoring-guide", id).contentType(APPLICATION_JSON)
+                    .content(body)).andExpect(status().isNoContent());
+            report("2026-09-01", "2026-09-01").andExpect(jsonPath("$.scoringGuides").isEmpty());
+        }
+        mockMvc.perform(put("/api/habits/{id}/scoring-guide", id).contentType(APPLICATION_JSON)
+                .content("{}")).andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/habits/{id}/scoring-guide", id).contentType(APPLICATION_JSON)
+                .content("{\"scoringGuide\":[]}")).andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/habits/missing/scoring-guide").contentType(APPLICATION_JSON)
+                .content("{\"scoringGuide\":null}")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/habits"))
+                .andExpect(jsonPath("$.habits[0].active").value(false))
+                .andExpect(jsonPath("$.habits[0].habitName").value("Rest"))
+                .andExpect(jsonPath("$.habits[0].scoringGuide").isEmpty());
+    }
+
     private String createHabit() throws Exception {
         String response = mockMvc.perform(post("/api/habits")
                 .contentType(APPLICATION_JSON)

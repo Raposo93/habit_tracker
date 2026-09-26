@@ -17,6 +17,7 @@ import com.raposo.habittracker.application.ListHabitsUseCase;
 import com.raposo.habittracker.application.RenameHabitUseCase;
 import com.raposo.habittracker.application.ReorderHabitsUseCase;
 import com.raposo.habittracker.application.SetHabitActiveUseCase;
+import com.raposo.habittracker.application.SetHabitScoringGuideUseCase;
 import com.raposo.habittracker.application.habit.CreateHabitInput;
 import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitId;
@@ -31,6 +32,7 @@ class HabitController {
     private final SetHabitActiveUseCase setHabitActiveUseCase;
     private final RenameHabitUseCase renameHabitUseCase;
     private final ReorderHabitsUseCase reorderHabitsUseCase;
+    private final SetHabitScoringGuideUseCase setHabitScoringGuideUseCase;
 
     HabitController(
             ListHabitsUseCase listHabitsUseCase,
@@ -38,13 +40,15 @@ class HabitController {
             HabitResponseMapper mapper,
             SetHabitActiveUseCase setHabitActiveUseCase,
             RenameHabitUseCase renameHabitUseCase,
-            ReorderHabitsUseCase reorderHabitsUseCase) {
+            ReorderHabitsUseCase reorderHabitsUseCase,
+            SetHabitScoringGuideUseCase setHabitScoringGuideUseCase) {
         this.listHabitsUseCase = listHabitsUseCase;
         this.createHabitUseCase = createHabitUseCase;
         this.mapper = mapper;
         this.setHabitActiveUseCase = setHabitActiveUseCase;
         this.renameHabitUseCase = renameHabitUseCase;
         this.reorderHabitsUseCase = reorderHabitsUseCase;
+        this.setHabitScoringGuideUseCase = setHabitScoringGuideUseCase;
     }
 
     @GetMapping
@@ -59,7 +63,8 @@ class HabitController {
     HabitResponse create(@RequestBody CreateHabitRequest request) {
         Habit habit = createHabitUseCase.execute(new CreateHabitInput(
                 request.habitName(),
-                request.cadence()));
+                request.cadence(),
+                request.scoringGuide()));
 
         return mapper.toResponse(habit);
     }
@@ -80,5 +85,11 @@ class HabitController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void reorder(@RequestBody ReorderHabitsRequest request) {
         reorderHabitsUseCase.execute(request.habitIds());
+    }
+
+    @PutMapping("/{habitId}/scoring-guide")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void setScoringGuide(@PathVariable String habitId, @RequestBody SetHabitScoringGuideRequest request) {
+        setHabitScoringGuideUseCase.execute(HabitId.of(habitId), request.scoringGuide());
     }
 }

@@ -1,8 +1,11 @@
 package com.raposo.habittracker.application.port;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import com.raposo.habittracker.application.report.HabitScoringGuide;
 
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.HabitId;
@@ -20,6 +23,8 @@ public interface HabitEntryRepository {
     boolean createEntry(LocalDate date, HabitId habitId, StoredEntry entry);
 
     boolean updateEntry(LocalDate date, HabitId habitId, StoredEntry entry);
+
+    List<HabitScoringGuide> findScoringGuidesBetweenDates(LocalDate startDate, LocalDate endDate);
 
     Optional<LocalDate> findEarliestEntryDate();
 }

@@ -9,5 +9,10 @@ public record HabitReport(
                 DateRange currentRange,
                 DateRange previousRange,
                 List<EntryReportRow> entries,
-                List<HabitSummaryRow> summary) {
+                List<HabitSummaryRow> summary,
+                List<HabitScoringGuide> scoringGuides) {
+    public HabitReport(ReportContext context, DateRange currentRange, DateRange previousRange,
+            List<EntryReportRow> entries, List<HabitSummaryRow> summary) {
+        this(context, currentRange, previousRange, entries, summary, List.of());
+    }
 }

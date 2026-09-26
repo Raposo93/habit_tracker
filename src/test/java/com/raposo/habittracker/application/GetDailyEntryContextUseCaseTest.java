@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import com.raposo.habittracker.application.entry.DailyEntryContext;
 import com.raposo.habittracker.application.entry.HabitEntryContext;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
+import com.raposo.habittracker.application.report.HabitScoringGuide;
 import com.raposo.habittracker.application.port.HabitRepository;
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.Habit;
@@ -84,6 +85,11 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
+        public boolean setScoringGuide(HabitId habitId, String scoringGuide) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public Optional<Habit> findById(HabitId id) {
             return habits.stream()
                     .filter(habit -> habit.id().equals(id))
@@ -137,6 +143,12 @@ class GetDailyEntryContextUseCaseTest {
                 LocalDate startDate,
                 LocalDate endDate) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<HabitScoringGuide> findScoringGuidesBetweenDates(
+                LocalDate startDate, LocalDate endDate) {
+            return List.of();
         }
 
         @Override

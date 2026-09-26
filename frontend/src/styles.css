@@ -526,7 +526,8 @@ textarea:disabled {
 .habit-management-form { display: grid; gap: 1rem; margin-top: 1rem; }
 .management-field { display: grid; gap: 0.45rem; font-weight: 700; }
 .management-field input,
-.management-field select {
+.management-field select,
+.management-field textarea {
   width: 100%;
   min-height: 44px;
   padding: 0.65rem 0.8rem;
@@ -544,6 +545,10 @@ textarea:disabled {
 .app-navigation button:focus-visible,
 .habit-actions button:focus-visible,
 .management-field input:focus-visible,
-.management-field select:focus-visible { outline: 3px solid #f2b84b; outline-offset: 2px; }
+.management-field select:focus-visible,
+.management-field textarea:focus-visible { outline: 3px solid #f2b84b; outline-offset: 2px; }
 
 .habit-order-actions { margin-top: 0.65rem; }
+
+.management-field textarea { resize: vertical; }
+.scoring-guide { white-space: pre-wrap; overflow-wrap: anywhere; }

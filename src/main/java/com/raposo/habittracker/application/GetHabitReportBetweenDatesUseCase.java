@@ -32,11 +32,14 @@ public class GetHabitReportBetweenDatesUseCase {
 
         Optional<LocalDate> trackingStartDate = entryRepository.findEarliestEntryDate();
 
-        return reportBuilder.build(
+        HabitReport report = reportBuilder.build(
                 currentEntries,
                 currentRange,
                 previousEntries,
                 previousRange,
                 trackingStartDate);
+        return new HabitReport(report.context(), report.currentRange(), report.previousRange(),
+                report.entries(), report.summary(),
+                entryRepository.findScoringGuidesBetweenDates(previousRange.startDate(), currentRange.endDate()));
     }
 }

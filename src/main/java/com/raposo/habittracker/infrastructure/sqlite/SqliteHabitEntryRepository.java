@@ -10,9 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import com.raposo.habittracker.application.report.HabitScoringGuide;
 
 import com.raposo.habittracker.application.port.HabitEntryRepository;
 import com.raposo.habittracker.domain.EntryKey;
@@ -210,7 +214,8 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
                     name TEXT NOT NULL UNIQUE,
                     cadence TEXT NOT NULL CHECK (cadence IN ('DAILY', 'WEEKLY')),
                     active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
-                    display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0)
+                    display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0),
+                    scoring_guide TEXT
                 )
                 """;
 
@@ -222,6 +227,7 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
             statement.execute(sqlHabits);
             statement.execute(sqlHabitEntries);
             migrateHabitOrder(connection);
+            migrateScoringGuide(connection);
             connection.commit();
         } catch (SQLException exception) {
             throw new IllegalStateException("Failed to create tables", exception);
@@ -248,6 +254,43 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
                         SELECT position FROM positions WHERE positions.id = habits.id
                     )
                     """);
+        }
+    }
+
+    private void migrateScoringGuide(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet columns = statement.executeQuery("PRAGMA table_info(habits)")) {
+                while (columns.next()) {
+                    if ("scoring_guide".equals(columns.getString("name"))) {
+                        return;
+                    }
+                }
+            }
+            statement.execute("ALTER TABLE habits ADD COLUMN scoring_guide TEXT");
+        }
+    }
+
+    @Override
+    public List<HabitScoringGuide> findScoringGuidesBetweenDates(LocalDate startDate, LocalDate endDate) {
+        String sql = """
+                SELECT DISTINCT h.id, h.name, h.scoring_guide
+                FROM habits h JOIN habit_entries e ON e.habit_id = h.id
+                WHERE e.date BETWEEN ? AND ? AND h.scoring_guide IS NOT NULL
+                ORDER BY h.name, h.id
+                """;
+        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, startDate.toString());
+            statement.setString(2, endDate.toString());
+            List<HabitScoringGuide> guides = new ArrayList<>();
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    guides.add(new HabitScoringGuide(HabitId.of(rows.getString("id")),
+                            rows.getString("name"), rows.getString("scoring_guide")));
+                }
+            }
+            return guides;
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to load report scoring guides", exception);
         }
     }
 

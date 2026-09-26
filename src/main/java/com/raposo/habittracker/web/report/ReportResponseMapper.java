@@ -18,6 +18,10 @@ public class ReportResponseMapper {
                         .toList(),
                 report.entries().stream()
                         .map(this::toEntryResponse)
+                        .toList(),
+                report.scoringGuides().stream()
+                        .map(guide -> new ReportResponse.ScoringGuideResponse(
+                                guide.habitId().value(), guide.habitName(), guide.scoringGuide()))
                         .toList());
     }
 

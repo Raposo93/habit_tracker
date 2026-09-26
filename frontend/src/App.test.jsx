@@ -5,7 +5,7 @@ import App from "./App.jsx";
 import { loadDailyEntryContext } from "./api/dailyEntries.js";
 import { loadHabits, setHabitActive } from "./api/habits.js";
 vi.mock("./api/dailyEntries.js", () => ({ loadDailyEntryContext: vi.fn(), createDailyEntry: vi.fn(), updateDailyEntry: vi.fn() }));
-vi.mock("./api/habits.js", () => ({ loadHabits: vi.fn(), createHabit: vi.fn(), renameHabit: vi.fn(), reorderHabits: vi.fn(), setHabitActive: vi.fn() }));
+vi.mock("./api/habits.js", () => ({ loadHabits: vi.fn(), createHabit: vi.fn(), renameHabit: vi.fn(), reorderHabits: vi.fn(), setHabitScoringGuide: vi.fn(), setHabitActive: vi.fn() }));
 const habit = { habitId: "sleep", habitName: "Sleep", cadence: "DAILY", active: true };
 beforeEach(() => {
   vi.resetAllMocks();

@@ -45,6 +45,13 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         output.append("\nSummary:\n");
         output.append(formatSummaryTable(report));
 
+        if (!report.scoringGuides().isEmpty()) {
+            output.append("\nScoring guides:\n");
+            for (var guide : report.scoringGuides()) {
+                output.append("\n").append(guide.habitName()).append("\n")
+                        .append(guide.scoringGuide()).append("\n");
+            }
+        }
         return output.toString();
     }
 

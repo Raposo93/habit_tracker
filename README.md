@@ -246,6 +246,7 @@ The `habits` table stores:
 * `cadence`
 * `active`
 * `display_order`
+* `scoring_guide` (optional free text)
 
 Supported habit cadences:
 
@@ -266,11 +267,16 @@ Run the project verification script before committing:
 
 The script checks Git diffs for whitespace errors and unresolved conflict markers, then runs `mvn verify`.
 
+Scoring guides are free text reference notes. They preserve line breaks and do
+not validate scores or change report calculations. Reports expose the current
+guide for habits recorded in either compared period, including inactive habits.
+The CLI prints these guides after the report tables.
+
 ## Current limitations
 
 The browser supports habit creation, renaming, activation/deactivation and
-ordering. Permanent deletion, cadence editing and scoring guides are not
-available. The CLI provides reports; habit management and entry/correction use
+ordering, and optional scoring guides. Permanent deletion and cadence editing
+are not available. The CLI provides reports; habit management and entry/correction use
 the browser.
 
 Weekly review, frontend reporting and analysis remain future roadmap work.
