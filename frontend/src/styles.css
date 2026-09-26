@@ -545,3 +545,5 @@ textarea:disabled {
 .habit-actions button:focus-visible,
 .management-field input:focus-visible,
 .management-field select:focus-visible { outline: 3px solid #f2b84b; outline-offset: 2px; }
+
+.habit-order-actions { margin-top: 0.65rem; }

@@ -6,13 +6,27 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.raposo.habittracker.application.habit.HabitCatalogChangedException;
 import com.raposo.habittracker.application.habit.HabitNameAlreadyExistsException;
 import com.raposo.habittracker.application.habit.HabitNotFoundException;
 import com.raposo.habittracker.application.habit.InvalidHabitCadenceException;
 import com.raposo.habittracker.application.habit.InvalidHabitNameException;
+import com.raposo.habittracker.application.habit.InvalidHabitOrderException;
 
 @RestControllerAdvice(assignableTypes = HabitController.class)
 class HabitExceptionHandler {
+
+    @ExceptionHandler(InvalidHabitOrderException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    HabitErrorResponse handleInvalidOrder(InvalidHabitOrderException exception) {
+        return new HabitErrorResponse("INVALID_HABIT_ORDER", exception.getMessage());
+    }
+
+    @ExceptionHandler(HabitCatalogChangedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    HabitErrorResponse handleCatalogChanged(HabitCatalogChangedException exception) {
+        return new HabitErrorResponse("HABIT_CATALOG_CHANGED", exception.getMessage());
+    }
 
     @ExceptionHandler(HabitNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)

@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { createHabit, loadHabits, renameHabit, setHabitActive } from "./habits.js";
+import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive } from "./habits.js";
 afterEach(() => vi.unstubAllGlobals());
 
 it("loads the full catalog", async () => {
@@ -35,4 +35,14 @@ it("handles unavailable backends and invalid catalogs", async () => {
   vi.stubGlobal("fetch", fetch);
   await expect(loadHabits()).rejects.toMatchObject({ code: "BACKEND_UNAVAILABLE" });
   await expect(loadHabits()).rejects.toMatchObject({ code: "INVALID_RESPONSE" });
+});
+
+it("sends the complete habit order and accepts no-content responses", async () => {
+  const fetch = vi.fn().mockResolvedValue({ ok: true, status: 204 });
+  vi.stubGlobal("fetch", fetch);
+  await reorderHabits(["inactive", "active"]);
+  expect(fetch).toHaveBeenCalledWith("/api/habits/order", {
+    method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ habitIds: ["inactive", "active"] }),
+  });
 });

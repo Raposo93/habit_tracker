@@ -24,12 +24,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.raposo.habittracker.application.CreateHabitUseCase;
 import com.raposo.habittracker.application.ListHabitsUseCase;
 import com.raposo.habittracker.application.RenameHabitUseCase;
+import com.raposo.habittracker.application.ReorderHabitsUseCase;
 import com.raposo.habittracker.application.SetHabitActiveUseCase;
 import com.raposo.habittracker.application.habit.CreateHabitInput;
+import com.raposo.habittracker.application.habit.HabitCatalogChangedException;
 import com.raposo.habittracker.application.habit.HabitNameAlreadyExistsException;
 import com.raposo.habittracker.application.habit.HabitNotFoundException;
 import com.raposo.habittracker.application.habit.InvalidHabitCadenceException;
 import com.raposo.habittracker.application.habit.InvalidHabitNameException;
+import com.raposo.habittracker.application.habit.InvalidHabitOrderException;
 import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitCadence;
 import com.raposo.habittracker.domain.HabitId;
@@ -54,6 +57,9 @@ class HabitControllerTest {
 
     @MockitoBean
     private RenameHabitUseCase renameHabitUseCase;
+
+    @MockitoBean
+    private ReorderHabitsUseCase reorderHabitsUseCase;
 
     @Test
     void givenFullCatalogWhenGetHabitsThenReturnActiveAndInactiveHabits() throws Exception {
@@ -277,5 +283,30 @@ class HabitControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_HABIT"));
         verifyNoInteractions(renameHabitUseCase);
+    }
+
+    @Test
+    void givenCompleteOrderWhenPutThenAdaptToUseCase() throws Exception {
+        mockMvc.perform(put("/api/habits/order").contentType(APPLICATION_JSON)
+                .content("{\"habitIds\":[\"review\",\"sleep\"]}"))
+                .andExpect(status().isNoContent());
+        verify(reorderHabitsUseCase).execute(List.of("review", "sleep"));
+    }
+
+    @Test
+    void givenInvalidOrderWhenPutThenReturnStableBadRequest() throws Exception {
+        willThrow(new InvalidHabitOrderException()).given(reorderHabitsUseCase).execute(null);
+        mockMvc.perform(put("/api/habits/order").contentType(APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_HABIT_ORDER"));
+    }
+
+    @Test
+    void givenChangedCatalogWhenPutThenReturnConflict() throws Exception {
+        willThrow(new HabitCatalogChangedException()).given(reorderHabitsUseCase).execute(List.of("sleep"));
+        mockMvc.perform(put("/api/habits/order").contentType(APPLICATION_JSON)
+                .content("{\"habitIds\":[\"sleep\"]}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("HABIT_CATALOG_CHANGED"));
     }
 }

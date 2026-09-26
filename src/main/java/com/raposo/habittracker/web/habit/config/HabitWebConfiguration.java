@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import com.raposo.habittracker.application.CreateHabitUseCase;
 import com.raposo.habittracker.application.ListHabitsUseCase;
 import com.raposo.habittracker.application.RenameHabitUseCase;
+import com.raposo.habittracker.application.ReorderHabitsUseCase;
 import com.raposo.habittracker.application.SetHabitActiveUseCase;
 import com.raposo.habittracker.application.port.HabitRepository;
 import com.raposo.habittracker.web.habit.HabitResponseMapper;
@@ -31,6 +32,11 @@ public class HabitWebConfiguration {
     @Bean
     RenameHabitUseCase renameHabitUseCase(HabitRepository habitRepository) {
         return new RenameHabitUseCase(habitRepository);
+    }
+
+    @Bean
+    ReorderHabitsUseCase reorderHabitsUseCase(HabitRepository habitRepository) {
+        return new ReorderHabitsUseCase(habitRepository);
     }
 
     @Bean

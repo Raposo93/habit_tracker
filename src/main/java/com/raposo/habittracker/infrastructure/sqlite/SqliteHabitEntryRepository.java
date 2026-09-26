@@ -295,7 +295,8 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL UNIQUE,
                     cadence TEXT NOT NULL CHECK (cadence IN ('DAILY', 'WEEKLY')),
-                    active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1))
+                    active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
+                    display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0)
                 )
                 """;
 
@@ -303,10 +304,36 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
                 Connection connection = connect();
                 Statement statement = connection.createStatement()) {
 
+            connection.setAutoCommit(false);
             statement.execute(sqlHabits);
             statement.execute(sqlHabitEntries);
+            migrateHabitOrder(connection);
+            connection.commit();
         } catch (SQLException exception) {
             throw new IllegalStateException("Failed to create tables", exception);
+        }
+    }
+
+    private void migrateHabitOrder(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet columns = statement.executeQuery("PRAGMA table_info(habits)")) {
+                while (columns.next()) {
+                    if ("display_order".equals(columns.getString("name"))) {
+                        return;
+                    }
+                }
+            }
+            statement.execute("ALTER TABLE habits ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0)");
+            // Preserve the existing alphabetical display order once, when upgrading the schema.
+            statement.execute("""
+                    WITH positions AS (
+                        SELECT id, ROW_NUMBER() OVER (ORDER BY name, id) - 1 AS position
+                        FROM habits
+                    )
+                    UPDATE habits SET display_order = (
+                        SELECT position FROM positions WHERE positions.id = habits.id
+                    )
+                    """);
         }
     }
 

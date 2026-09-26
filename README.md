@@ -100,14 +100,16 @@ context is reloaded to reflect habit changes.
 - Use `Desactivar` to hide a habit from daily entry while preserving its history.
 - Use `Reactivar` to restore the same habit to daily entry.
 - Active and inactive habits remain visible in the management catalog.
+- Use `Subir` and `Bajar` to set their order. Daily entry follows the same order,
+  showing only active habits. New habits are appended to the end.
 
 The catalog reloads after each successful write. While saving, other writes and
 navigation are disabled. Validation errors keep the entered name. If a write
 result cannot be confirmed or the subsequent reload fails, reload the catalog
 before saving again.
 
-Cadence editing, permanent deletion, scoring guides and reordering are not part
-of this screen yet.
+Cadence editing, permanent deletion and scoring guides are not part of this
+screen yet.
 
 ## CLI
 

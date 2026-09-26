@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { createHabit, loadHabits, renameHabit, setHabitActive } from "../api/habits.js";
+import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive } from "../api/habits.js";
 
 function errorMessage(error) {
   switch (error?.code) {
+    case "HABIT_CATALOG_CHANGED": return "El catálogo de hábitos ha cambiado. Recárgalo antes de ordenar de nuevo.";
+    case "INVALID_HABIT_ORDER": return "El orden de hábitos no es válido. Recarga el catálogo.";
     case "INVALID_HABIT_NAME": return "El nombre no puede estar vacío.";
     case "HABIT_NAME_ALREADY_EXISTS": return "Ya existe un hábito con ese nombre, aunque esté inactivo.";
     case "HABIT_NOT_FOUND": return "El hábito ya no existe. Recarga el catálogo.";
@@ -50,7 +52,7 @@ export default function HabitsPage({ onSavingChange }) {
       try {
         await operation();
       } catch (error) {
-        if (error?.code === "BACKEND_UNAVAILABLE" || error?.code === "HABIT_NOT_FOUND" || !error?.status || error.status >= 500) {
+        if (error?.code === "BACKEND_UNAVAILABLE" || error?.code === "HABIT_NOT_FOUND" || error?.code === "HABIT_CATALOG_CHANGED" || error?.code === "INVALID_HABIT_ORDER" || !error?.status || error.status >= 500) {
           setStatus("stale");
           setProblem(errorMessage(error));
         }
@@ -71,6 +73,14 @@ export default function HabitsPage({ onSavingChange }) {
     }
   }
 
+  function moveHabit(index, direction) {
+    const reordered = [...habits];
+    const destination = index + direction;
+    [reordered[index], reordered[destination]] = [reordered[destination], reordered[index]];
+    return save(reordered[destination].habitId,
+      () => reorderHabits(reordered.map((habit) => habit.habitId)));
+  }
+
   const blocked = status !== "ready" || saving !== null;
   return (
     <main className="app-shell">
@@ -89,7 +99,9 @@ export default function HabitsPage({ onSavingChange }) {
       </section>
       {habits?.length === 0 && <p className="empty-state">Todavía no hay hábitos. Crea el primero.</p>}
       <section className="habit-grid" aria-label="Catálogo de hábitos">
-        {habits?.map((habit) => <HabitCard key={habit.habitId} habit={habit} blocked={blocked}
+        {habits?.map((habit, index) => <HabitCard key={habit.habitId} habit={habit} blocked={blocked}
+          first={index === 0} last={index === habits.length - 1}
+          onMove={(direction) => moveHabit(index, direction)}
           saving={saving === habit.habitId}
           onRename={(name) => save(habit.habitId, () => renameHabit(habit.habitId, name))}
           onSetActive={() => save(habit.habitId, () => setHabitActive(habit.habitId, !habit.active))} />)}
@@ -132,7 +144,7 @@ function HabitForm({ habit, blocked, saving, onSave, onCancel }) {
   </form>;
 }
 
-function HabitCard({ habit, blocked, saving, onRename, onSetActive }) {
+function HabitCard({ habit, blocked, saving, onRename, onSetActive, first, last, onMove }) {
   const [editing, setEditing] = useState(false);
   const [feedback, setFeedback] = useState(null);
   async function changeActive() {
@@ -140,6 +152,13 @@ function HabitCard({ habit, blocked, saving, onRename, onSetActive }) {
     setFeedback(null);
     try {
       if (await onSetActive()) setFeedback({ message: habit.active ? "Hábito desactivado." : "Hábito reactivado.", error: false });
+    } catch (error) { setFeedback({ message: errorMessage(error), error: true }); }
+  }
+  async function move(direction) {
+    if (blocked) return;
+    setFeedback(null);
+    try {
+      if (await onMove(direction)) setFeedback({ message: "Orden guardado.", error: false });
     } catch (error) { setFeedback({ message: errorMessage(error), error: true }); }
   }
   return <article className="habit-card" aria-label={habit.habitName}>
@@ -151,6 +170,10 @@ function HabitCard({ habit, blocked, saving, onRename, onSetActive }) {
         <button type="button" disabled={blocked} onClick={() => { setEditing(true); setFeedback(null); }}>Renombrar</button>
         <button type="button" disabled={blocked} onClick={changeActive}>{saving ? "Guardando…" : habit.active ? "Desactivar" : "Reactivar"}</button>
       </div>}
+    <div className="habit-actions habit-order-actions" aria-label="Orden del hábito">
+      <button type="button" disabled={blocked || editing || first} onClick={() => move(-1)}>Subir</button>
+      <button type="button" disabled={blocked || editing || last} onClick={() => move(1)}>Bajar</button>
+    </div>
     {feedback && <p className={`entry-feedback${feedback.error ? " entry-feedback--error" : ""}`} role={feedback.error ? "alert" : "status"}>{feedback.message}</p>}
   </article>;
 }

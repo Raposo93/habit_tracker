@@ -62,6 +62,35 @@ stored.
 Google Sheets compatibility is no longer a supported product requirement.
 Removal of the remaining import implementation is tracked separately in #27.
 
+## Habit order
+
+Habit Management and Daily Entry use one persisted order. The management catalog
+includes inactive habits in that order; Daily Entry filters them out without
+changing the relative order of active habits. Renaming, deactivation and
+reactivation preserve positions. New habits are appended to the end.
+
+Existing databases are upgraded automatically: their initial positions preserve
+the previous alphabetical order. Subsequent application starts preserve the
+configured positions.
+
+Use `Subir` and `Bajar` in the management screen to move a habit one position.
+The UI waits for the write and reload before displaying the confirmed order.
+
+`PUT /api/habits/order` accepts the complete catalog, including inactive habits:
+
+```json
+{"habitIds": ["sleep-id", "exercise-id", "review-id"]}
+```
+
+Each identity must appear exactly once. The operation returns `204 No Content`;
+repeating the same order succeeds. An empty list is valid only for an empty
+catalog. Missing, blank, null or duplicate identities return `400` with
+`INVALID_HABIT_ORDER`. A list that omits a stored habit or includes an unknown
+identity returns `409` with `HABIT_CATALOG_CHANGED`; reload before trying again.
+The transaction either saves all positions or leaves the existing order intact.
+
+Report ordering remains unchanged.
+
 ## Responsibilities by layer
 
 - `domain`: preserve invariants that belong to `Habit` itself.

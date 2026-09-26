@@ -6,7 +6,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -29,8 +31,8 @@ public class SqliteHabitRepository implements HabitRepository {
     @Override
     public boolean create(Habit habit) {
         String sql = """
-                INSERT INTO habits (id, name, cadence, active)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO habits (id, name, cadence, active, display_order)
+                VALUES (?, ?, ?, ?, (SELECT COALESCE(MAX(display_order), -1) + 1 FROM habits))
                 ON CONFLICT(name) DO NOTHING
                 """;
 
@@ -81,6 +83,46 @@ public class SqliteHabitRepository implements HabitRepository {
                 return RenameResult.NAME_ALREADY_EXISTS;
             }
             throw new IllegalStateException("Failed to rename habit", exception);
+        }
+    }
+
+    @Override
+    public boolean reorder(List<HabitId> habitIds) {
+        try (Connection connection = connect(); Statement transaction = connection.createStatement()) {
+            // Reserve the write transaction before reading so catalog validation and updates stay atomic.
+            transaction.execute("BEGIN IMMEDIATE");
+            try {
+                HashSet<HabitId> storedIds = new HashSet<>();
+                try (ResultSet rows = transaction.executeQuery("SELECT id FROM habits")) {
+                    while (rows.next()) {
+                        storedIds.add(HabitId.of(rows.getString("id")));
+                    }
+                }
+                if (habitIds.size() != storedIds.size() || !storedIds.equals(new HashSet<>(habitIds))) {
+                    transaction.execute("ROLLBACK");
+                    return false;
+                }
+                try (PreparedStatement update = connection.prepareStatement(
+                        "UPDATE habits SET display_order = ? WHERE id = ?")) {
+                    for (int position = 0; position < habitIds.size(); position++) {
+                        update.setInt(1, position);
+                        update.setString(2, habitIds.get(position).value());
+                        update.addBatch();
+                    }
+                    update.executeBatch();
+                }
+                transaction.execute("COMMIT");
+                return true;
+            } catch (SQLException exception) {
+                try {
+                    transaction.execute("ROLLBACK");
+                } catch (SQLException rollbackFailure) {
+                    exception.addSuppressed(rollbackFailure);
+                }
+                throw exception;
+            }
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to reorder habits", exception);
         }
     }
 
@@ -144,7 +186,7 @@ public class SqliteHabitRepository implements HabitRepository {
                 SELECT id, name, cadence, active
                 FROM habits
                 WHERE active = 1
-                ORDER BY name
+                ORDER BY display_order, id
                 """;
 
         return findMany(sql);
@@ -155,7 +197,7 @@ public class SqliteHabitRepository implements HabitRepository {
         String sql = """
                 SELECT id, name, cadence, active
                 FROM habits
-                ORDER BY name
+                ORDER BY display_order, id
                 """;
 
         return findMany(sql);

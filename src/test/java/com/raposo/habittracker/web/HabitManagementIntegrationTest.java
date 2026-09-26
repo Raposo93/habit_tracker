@@ -172,6 +172,36 @@ class HabitManagementIntegrationTest {
                 .andExpect(jsonPath("$.summary[0].trend").value("IMPROVED"));
     }
 
+    @Test
+    void givenInactiveHabitInConfiguredOrderWhenReactivatedThenDailyEntryUsesSameOrder() throws Exception {
+        String firstId = createHabit();
+        String response = mockMvc.perform(post("/api/habits").contentType(APPLICATION_JSON)
+                .content("{\"habitName\":\"Exercise\",\"cadence\":\"DAILY\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String secondId = new ObjectMapper().readTree(response).get("habitId").asString();
+        createEntry(firstId, "2026-09-02", "{\"score\":0,\"note\":\"Tired\"}");
+        setActive(secondId, false);
+        String order = new ObjectMapper().writeValueAsString(Map.of("habitIds", java.util.List.of(secondId, firstId)));
+        mockMvc.perform(put("/api/habits/order").contentType(APPLICATION_JSON).content(order))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/habits"))
+                .andExpect(jsonPath("$.habits[0].habitId").value(secondId))
+                .andExpect(jsonPath("$.habits[1].habitId").value(firstId));
+        dailyContext("2026-09-02")
+                .andExpect(jsonPath("$.habits.length()").value(1))
+                .andExpect(jsonPath("$.habits[0].habitId").value(firstId));
+        setActive(secondId, true);
+        dailyContext("2026-09-02")
+                .andExpect(jsonPath("$.habits[0].habitId").value(secondId))
+                .andExpect(jsonPath("$.habits[1].habitId").value(firstId))
+                .andExpect(jsonPath("$.habits[1].entry.score").value(0.0))
+                .andExpect(jsonPath("$.habits[1].entry.note").value("Tired"));
+        mockMvc.perform(put("/api/habits/order").contentType(APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(Map.of("habitIds", java.util.List.of(firstId)))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("HABIT_CATALOG_CHANGED"));
+    }
+
     private String createHabit() throws Exception {
         String response = mockMvc.perform(post("/api/habits")
                 .contentType(APPLICATION_JSON)

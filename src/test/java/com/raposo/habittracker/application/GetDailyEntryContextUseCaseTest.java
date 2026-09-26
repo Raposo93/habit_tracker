@@ -65,6 +65,11 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
+        public boolean reorder(List<HabitId> habitIds) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public RenameResult rename(HabitId habitId, String name) {
             throw new UnsupportedOperationException();
         }

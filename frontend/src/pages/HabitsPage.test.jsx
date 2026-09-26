@@ -1,10 +1,10 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
-import { createHabit, loadHabits, renameHabit, setHabitActive } from "../api/habits.js";
+import { createHabit, loadHabits, renameHabit, reorderHabits, setHabitActive } from "../api/habits.js";
 import HabitsPage from "./HabitsPage.jsx";
 
-vi.mock("../api/habits.js", () => ({ createHabit: vi.fn(), loadHabits: vi.fn(), renameHabit: vi.fn(), setHabitActive: vi.fn() }));
+vi.mock("../api/habits.js", () => ({ createHabit: vi.fn(), loadHabits: vi.fn(), renameHabit: vi.fn(), reorderHabits: vi.fn(), setHabitActive: vi.fn() }));
 const sleep = { habitId: "stable-sleep", habitName: "Sleep", cadence: "DAILY", active: true };
 const review = { habitId: "stable-review", habitName: "Review", cadence: "WEEKLY", active: false };
 function deferred() { let resolve; const promise = new Promise((done) => { resolve = done; }); return { promise, resolve }; }
@@ -18,6 +18,7 @@ beforeEach(() => {
   createHabit.mockResolvedValue(undefined);
   renameHabit.mockResolvedValue(undefined);
   setHabitActive.mockResolvedValue(undefined);
+  reorderHabits.mockResolvedValue(undefined);
 });
 
 it("shows loading, active and inactive habits with their cadence", async () => {
@@ -126,4 +127,39 @@ it("blocks writes after an uncertain result and retains the draft until reload",
   expect(creator().getByRole("button", { name: "Crear hábito" })).toBeDisabled();
   await userEvent.click(screen.getByRole("button", { name: "Recargar catálogo" }));
   expect(creator().getByRole("button", { name: "Crear hábito" })).toBeEnabled();
+});
+
+it("moves habits including inactive ones and displays the confirmed order", async () => {
+  await ready();
+  expect(card("Sleep").getByRole("button", { name: "Subir" })).toBeDisabled();
+  expect(card("Review").getByRole("button", { name: "Bajar" })).toBeDisabled();
+  loadHabits.mockResolvedValue([review, sleep]);
+  await userEvent.click(card("Review").getByRole("button", { name: "Subir" }));
+  expect(reorderHabits).toHaveBeenCalledWith(["stable-review", "stable-sleep"]);
+  expect(screen.getAllByRole("article").map((item) => item.getAttribute("aria-label"))).toEqual(["Review", "Sleep"]);
+  expect(card("Review").getByRole("button", { name: "Subir" })).toBeDisabled();
+  loadHabits.mockResolvedValue([sleep, review]);
+  await userEvent.click(card("Review").getByRole("button", { name: "Bajar" }));
+  expect(reorderHabits).toHaveBeenLastCalledWith(["stable-sleep", "stable-review"]);
+});
+
+it("blocks repeated moves until the write and reload finish", async () => {
+  await ready();
+  const pending = deferred(); reorderHabits.mockReturnValueOnce(pending.promise);
+  await userEvent.dblClick(card("Sleep").getByRole("button", { name: "Bajar" }));
+  expect(reorderHabits).toHaveBeenCalledTimes(1);
+  expect(card("Review").getByRole("button", { name: "Subir" })).toBeDisabled();
+  expect(screen.getAllByRole("article")[0]).toHaveAttribute("aria-label", "Sleep");
+  await act(async () => pending.resolve());
+});
+
+it("requires a catalog reload after a reorder conflict without changing the visible order", async () => {
+  await ready(); reorderHabits.mockRejectedValueOnce({ code: "HABIT_CATALOG_CHANGED", status: 409 });
+  await userEvent.click(card("Sleep").getByRole("button", { name: "Bajar" }));
+  expect(card("Sleep").getByRole("alert")).toHaveTextContent("ha cambiado");
+  expect(card("Sleep").getByRole("button", { name: "Bajar" })).toBeDisabled();
+  expect(screen.getAllByRole("article")[0]).toHaveAttribute("aria-label", "Sleep");
+  loadHabits.mockResolvedValue([review, sleep]);
+  await userEvent.click(screen.getByRole("button", { name: "Recargar catálogo" }));
+  expect(card("Sleep").getByRole("button", { name: "Subir" })).toBeEnabled();
 });

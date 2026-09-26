@@ -51,3 +51,7 @@ export async function renameHabit(habitId, habitName) {
 export async function setHabitActive(habitId, active) {
   await write(`${HABITS_URL}/${encodeURIComponent(habitId)}/active`, "PUT", { active });
 }
+
+export async function reorderHabits(habitIds) {
+  await write(`${HABITS_URL}/order`, "PUT", { habitIds });
+}

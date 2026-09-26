@@ -18,6 +18,9 @@ public interface HabitRepository {
 
     RenameResult rename(HabitId habitId, String name);
 
+    /** Reorders the complete catalog atomically; false means the catalog does not match. */
+    boolean reorder(List<HabitId> habitIds);
+
     Optional<Habit> findById(HabitId id);
 
     Optional<Habit> findByExactName(String name);
