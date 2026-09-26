@@ -106,17 +106,39 @@ screen yet.
 
 ## CLI
 
+Build and verify the application once before using the CLI:
+
+```bash
+mvn test
+```
+
+Repeat this step after changing Java code. The `habit` script runs the compiled
+CLI through Maven without rebuilding it for each query.
+
 Query last week:
 
 ```bash
-mvn exec:java -Dexec.mainClass="com.raposo.habittracker.Main" -Dexec.args="--query-last-week"
+./habit --query-last-week
 ```
 
 Query between dates:
 
 ```bash
-mvn exec:java -Dexec.mainClass="com.raposo.habittracker.Main" -Dexec.args="--query-between-dates 2026-05-25 2026-06-07"
+./habit --query-between-dates 2026-05-25 2026-06-07
 ```
+
+Run `./habit` without arguments to display the available commands.
+
+The script can also be invoked by its path from another directory. It runs from
+the project root, so the default database and relative `DB_PATH` values are
+resolved there. An absolute `DB_PATH` selects the same database from any location:
+
+```bash
+DB_PATH="/absolute/path/habits.db" ./habit --query-last-week
+```
+
+Java and Maven must be available on `PATH`. The script reports missing Maven or
+compiled classes and returns the Maven process exit status.
 
 ## HTTP API
 
