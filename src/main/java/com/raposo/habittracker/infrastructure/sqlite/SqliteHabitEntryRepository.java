@@ -11,13 +11,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import com.raposo.habittracker.application.port.HabitEntryRepository;
 import com.raposo.habittracker.domain.EntryKey;
-import com.raposo.habittracker.domain.HabitEntry;
 import com.raposo.habittracker.domain.HabitId;
 import com.raposo.habittracker.domain.StoredEntry;
 
@@ -27,28 +25,6 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
     public SqliteHabitEntryRepository(Path dbPath) {
         this.dbPath = dbPath;
         createTables();
-    }
-
-    @Override
-    public Optional<LocalDate> findLatestEntryDate() {
-        String sql = "SELECT MAX(date) FROM habit_entries";
-
-        try (
-                Connection connection = connect();
-                Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(sql)) {
-
-            String value = resultSet.getString(1);
-
-            if (value == null) {
-                return Optional.empty();
-            }
-
-            return Optional.of(LocalDate.parse(value));
-
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to find latest entry date", exception);
-        }
     }
 
     @Override
@@ -202,68 +178,6 @@ public class SqliteHabitEntryRepository implements HabitEntryRepository {
 
         } catch (SQLException exception) {
             throw new IllegalStateException("Failed to update entry", exception);
-        }
-    }
-
-    @Override
-    public void insertEntries(List<HabitEntry> entries) {
-        if (entries.isEmpty()) {
-            return;
-        }
-
-        String sql = """
-                INSERT INTO habit_entries (date, habit_id, score, note)
-                VALUES (?, (SELECT id FROM habits WHERE name = ?), ?, ?)
-                """;
-
-        try (
-                Connection connection = connect();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            for (HabitEntry entry : entries) {
-                statement.setString(1, entry.entryDate().toString());
-                statement.setString(2, entry.habit());
-                statement.setDouble(3, entry.score());
-                statement.setString(4, entry.note());
-                statement.addBatch();
-            }
-
-            statement.executeBatch();
-
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to insert entries", exception);
-        }
-    }
-
-    @Override
-    public void updateEntries(List<HabitEntry> entries) {
-        if (entries.isEmpty()) {
-            return;
-        }
-
-        String sql = """
-                UPDATE habit_entries
-                SET score = ?, note = ?
-                WHERE date = ?
-                  AND habit_id = (SELECT id FROM habits WHERE name = ?)
-                """;
-
-        try (
-                Connection connection = connect();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            for (HabitEntry entry : entries) {
-                statement.setDouble(1, entry.score());
-                statement.setString(2, entry.note());
-                statement.setString(3, entry.entryDate().toString());
-                statement.setString(4, entry.habit());
-                statement.addBatch();
-            }
-
-            statement.executeBatch();
-
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to update entries", exception);
         }
     }
 

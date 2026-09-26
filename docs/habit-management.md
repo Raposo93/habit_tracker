@@ -60,7 +60,8 @@ including for historical entries. No historical display names or aliases are
 stored.
 
 Google Sheets compatibility is no longer a supported product requirement.
-Removal of the remaining import implementation is tracked separately in #27.
+The Google Sheets import implementation and OAuth configuration have been
+removed. Existing SQLite history remains available.
 
 ## Habit order
 

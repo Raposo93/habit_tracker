@@ -65,7 +65,7 @@ class SqliteHabitRepositoryTest {
         boolean created = repository.create(duplicate);
 
         assertFalse(created);
-        assertEquals(Optional.of(existing), repository.findByExactName("Meditation"));
+        assertEquals(Optional.of(existing), repository.findById(existing.id()));
         assertTrue(repository.findById(duplicate.id()).isEmpty());
     }
 
@@ -155,7 +155,6 @@ class SqliteHabitRepositoryTest {
 
         assertEquals(Optional.of(Habit.active(habit.id(), "Rest", habit.cadence())),
                 new SqliteHabitRepository(dbPath).findById(habit.id()));
-        assertTrue(repository.findByExactName("Sleep").isEmpty());
         var context = new GetDailyEntryContextUseCase(repository, entries).execute(date);
         assertEquals(habit.id(), context.habits().getFirst().habitId());
         assertEquals("Rest", context.habits().getFirst().habitName());

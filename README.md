@@ -4,20 +4,19 @@
   <img src="frontend/public/assets/ramon.png" alt="Ramón, the Habit Tracker pixel-art ram mascot" width="180">
 </p>
 
-Habit Tracker is a Java and React application for recording, storing and analysing habit entries. It supports browser-based daily entry and correction backed by SQLite, together with the existing CLI workflow for Google Sheets imports and reports.
+Habit Tracker is a Java and React application for recording, storing and analysing habit entries. It supports browser-based habit management, daily entry and correction backed by SQLite, together with CLI and HTTP reporting.
 
 Ramón, the pixel-art ram above, is the project mascot.
 
 ## Current status
 
-Version 0.3.0 replaces manual daily entry and correction in Google Sheets with a write-first browser workflow while preserving the existing CLI import and reporting capabilities.
+The latest released version is 0.3.0. Current development adds habit management for 0.4.0 and retires Google Sheets import support.
 
 The application can:
 
-* import habit entries from Google Sheets
-* store imported entries in SQLite
+* create, rename, activate, deactivate and order habits from the browser
+* store habit entries in SQLite
 * store habit entries internally by stable `habit_id`
-* keep habit names as the external Google Sheets import contract
 * query last week
 * query a custom date range
 * compare the current range with the previous equivalent range
@@ -36,27 +35,21 @@ The application can:
 * Maven
 * Node.js 20.19+ or 22.12+
 
-Google Sheets credentials and the `SPREADSHEET_ID` environment variable are required only when importing from Google Sheets. They are not required for the web entry workflow.
-
 ## Configuration
 
-Required only for Google Sheets imports:
-
-```bash
-export SPREADSHEET_ID="your-google-sheet-id"
-```
-
-Optional environment variables:
+The optional `DB_PATH` environment variable selects the SQLite database:
 
 ```bash
 export DB_PATH="db/habit_tracker.db"
-export CREDENTIALS_PATH="credentials.json"
-export TOKENS_DIRECTORY_PATH="tokens"
 ```
 
-If optional values are not provided, the application uses its default paths.
+The default path is `db/habit_tracker.db`. The web application and CLI reports
+use the same storage configuration. An empty database can be populated by
+creating habits and recording entries from the browser.
 
-The web workflow uses the SQLite database configured through `DB_PATH`. That database must already contain the active habits to display. Habit management is outside version 0.3.
+Google Sheets import and OAuth are no longer supported. Existing SQLite data
+remains available; no re-import or data migration is required for this removal.
+Old credentials and token files are not read or deleted by the application.
 
 ## Web daily entry
 
@@ -112,12 +105,6 @@ Cadence editing, permanent deletion and scoring guides are not part of this
 screen yet.
 
 ## CLI
-
-Import entries:
-
-```bash
-mvn exec:java -Dexec.mainClass="com.raposo.habittracker.Main" -Dexec.args="--import"
-```
 
 Query last week:
 
@@ -258,6 +245,7 @@ The `habits` table stores:
 * `name`
 * `cadence`
 * `active`
+* `display_order`
 
 Supported habit cadences:
 
@@ -267,19 +255,6 @@ WEEKLY
 ```
 
 Reports still display habit names, not internal ids.
-
-## Google Sheets import contract
-
-Google Sheets still uses habit names as the external import contract.
-
-The browser workflow replaces manual daily entry and ordinary corrections in Google Sheets. Google Sheets remains available as an import source and is not required when entering or correcting data from the browser.
-
-During import:
-
-* Sheet habit names must match existing habit names exactly
-* unknown habit names fail the import
-* habits are not created automatically
-* entries are stored using the matching internal `habit_id`
 
 ## Development checks
 
@@ -293,12 +268,16 @@ The script checks Git diffs for whitespace errors and unresolved conflict marker
 
 ## Current limitations
 
-Do not manually rename habit names in Google Sheets yet.
+The browser supports habit creation, renaming, activation/deactivation and
+ordering. Permanent deletion, cadence editing and scoring guides are not
+available. The CLI provides reports; habit management and entry/correction use
+the browser.
 
-Internally, entries are already stored by `habit_id`, but habit creation, renaming, deactivation and ordering are not exposed through the CLI or HTTP API yet.
-
-Weekly review, frontend reporting and analysis, and full habit management remain outside version 0.3.
+Weekly review, frontend reporting and analysis remain future roadmap work.
+Google Sheets import is no longer supported, and no replacement import format
+is provided.
 
 ## Roadmap
 
-Review and analysis are intentionally outside version 0.3. See [ROADMAP.md](ROADMAP.md) for the current milestone boundaries and future product scope.
+See [ROADMAP.md](ROADMAP.md) for current milestone boundaries and future product
+scope.

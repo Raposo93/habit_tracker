@@ -154,33 +154,6 @@ public class SqliteHabitRepository implements HabitRepository {
     }
 
     @Override
-    public Optional<Habit> findByExactName(String name) {
-        String sql = """
-                SELECT id, name, cadence, active
-                FROM habits
-                WHERE name = ?
-                """;
-
-        try (
-                Connection connection = connect();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setString(1, name);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return Optional.of(mapHabit(resultSet));
-                }
-
-                return Optional.empty();
-            }
-
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to find habit by exact name", exception);
-        }
-    }
-
-    @Override
     public List<Habit> findActive() {
         String sql = """
                 SELECT id, name, cadence, active

@@ -7,6 +7,11 @@ GitHub Issues track the concrete work required to reach each milestone.
 
 The roadmap may change as real usage reveals more valuable priorities.
 
+Google Sheets import was supported in the historical 0.1–0.3 milestones and is
+retired during 0.4 development. References in those earlier milestones describe
+the original scope; current entry and habit management use the browser.
+No replacement import integration is planned here.
+
 ---
 
 ## 0.1.0 — Core reporting engine
@@ -108,8 +113,8 @@ write safely.
 
 ### Goal
 
-Remove the need to edit SQLite, configuration or Google Sheets when the set of
-tracked habits changes.
+Manage the set of tracked habits from the application without editing SQLite
+or configuration directly.
 
 ### Done when
 
@@ -225,7 +230,7 @@ terminal.
 A user can:
 
 - install and configure the application;
-- import existing data or start with new data;
+- start with new data or continue using existing SQLite data;
 - manage habits;
 - record daily habit data;
 - correct historical entries;
@@ -234,8 +239,7 @@ A user can:
 - understand common errors;
 - back up and restore data.
 
-Google Sheets may remain available as an import or interoperability option, but
-it is no longer required for normal use.
+Google Sheets is no longer a supported import or interoperability option.
 
 ---
 

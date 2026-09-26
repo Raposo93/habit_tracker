@@ -16,7 +16,6 @@ import com.raposo.habittracker.application.port.HabitRepository;
 import com.raposo.habittracker.domain.EntryKey;
 import com.raposo.habittracker.domain.Habit;
 import com.raposo.habittracker.domain.HabitCadence;
-import com.raposo.habittracker.domain.HabitEntry;
 import com.raposo.habittracker.domain.HabitId;
 import com.raposo.habittracker.domain.StoredEntry;
 
@@ -92,13 +91,6 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
-        public Optional<Habit> findByExactName(String name) {
-            return habits.stream()
-                    .filter(habit -> habit.name().equals(name))
-                    .findFirst();
-        }
-
-        @Override
         public List<Habit> findActive() {
             return habits.stream()
                     .filter(Habit::active)
@@ -141,24 +133,9 @@ class GetDailyEntryContextUseCaseTest {
         }
 
         @Override
-        public Optional<LocalDate> findLatestEntryDate() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public Map<EntryKey, StoredEntry> findEntriesBetweenDates(
                 LocalDate startDate,
                 LocalDate endDate) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void insertEntries(List<HabitEntry> entries) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void updateEntries(List<HabitEntry> entries) {
             throw new UnsupportedOperationException();
         }
 

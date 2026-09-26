@@ -16,7 +16,6 @@ import com.raposo.habittracker.application.report.HabitReport;
 import com.raposo.habittracker.application.report.HabitSummaryRow;
 import com.raposo.habittracker.domain.DateRange;
 import com.raposo.habittracker.domain.EntryKey;
-import com.raposo.habittracker.domain.HabitEntry;
 import com.raposo.habittracker.domain.HabitId;
 import com.raposo.habittracker.domain.StoredEntry;
 
@@ -117,21 +116,6 @@ class GetHabitReportBetweenDatesUseCaseTest {
         @Override
         public Optional<LocalDate> findEarliestEntryDate() {
             return earliestEntryDate;
-        }
-
-        @Override
-        public Optional<LocalDate> findLatestEntryDate() {
-            return Optional.empty();
-        }
-
-        @Override
-        public void insertEntries(List<HabitEntry> entries) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void updateEntries(List<HabitEntry> entries) {
-            throw new UnsupportedOperationException();
         }
 
         List<DateRange> queriedRanges() {

@@ -23,8 +23,6 @@ public interface HabitRepository {
 
     Optional<Habit> findById(HabitId id);
 
-    Optional<Habit> findByExactName(String name);
-
     List<Habit> findActive();
 
     List<Habit> findAll();
