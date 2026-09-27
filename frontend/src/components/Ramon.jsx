@@ -13,6 +13,7 @@ const ANIMATIONS = {
   happy: { ...SPRITESHEET, row: 6, frames: 6, duration: 900 },
   sleepy: { ...SPRITESHEET, row: 5, frames: 8, duration: 1000 },
   apple: {
+    // Each pose uses idle's 192 × 208 canvas, scale and foot baseline.
     src: "/assets/ramon-apple-sprite.png",
     columns: 4,
     rows: 2,

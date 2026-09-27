@@ -58,10 +58,6 @@ textarea,
   pointer-events: none;
 }
 
-.ramon-sprite[data-animation="apple"] {
-  aspect-ratio: 1;
-}
-
 .ramon-trigger {
   position: relative;
   aspect-ratio: 192 / 208;
