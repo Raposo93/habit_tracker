@@ -10,8 +10,8 @@ Ramón, the pixel-art ram above, is the project mascot.
 
 ## Current status
 
-Version 0.4.0 adds habit management and optional scoring guides, and retires
-Google Sheets import support. The code and metadata are prepared for release;
+Version 0.4.1 fixes packaged CLI reporting and Ramón's apple animation, following
+0.4.0's habit management and optional scoring guides. Google Sheets import is retired;
 see [release notes](CHANGELOG.md).
 
 The application can:
@@ -78,7 +78,7 @@ Build the application and run the packaged backend with its bundled frontend:
 
 ```bash
 mvn verify
-java -jar target/habit-tracker-0.4.0.jar
+java -jar target/habit-tracker-0.4.1.jar
 ```
 
 Open `http://localhost:8080`. The packaged application uses `DB_PATH` just like
@@ -139,7 +139,7 @@ mvn verify
 ```
 
 Repeat this step after changing Java code. The `habit` script runs the packaged
-JAR. The same commands can be passed directly to `java -jar target/habit-tracker-0.4.0.jar`.
+JAR. The same commands can be passed directly to `java -jar target/habit-tracker-0.4.1.jar`.
 
 Query last week:
 

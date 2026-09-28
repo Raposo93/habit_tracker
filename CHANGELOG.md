@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.4.1 — Packaged CLI fixes
+
+- Run `--query-last-week` directly from the packaged JAR.
+- Run `--query-between-dates` directly from the packaged JAR.
+- Do not start the web application for CLI commands.
+- Validate packaged CLI behavior during `mvn verify`.
+- Handle invalid CLI arguments gracefully.
+- Fix Ramón apple animation frame alignment.
+
 ## 0.4.0 — Prepared for release
 
 ### Habit management

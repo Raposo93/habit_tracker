@@ -33,11 +33,15 @@ grep -Fq 'Summary:' "$test_dir/output"
 run_cli --query-between-dates 2026-09-21
 grep -Fq -- '--query-between-dates <start-date> <end-date>' "$test_dir/output"
 
-run_cli --unknown-command
-grep -Fq -- '--query-last-week' "$test_dir/output"
-
 run_cli --query-last-week extra
 grep -Fq -- '--query-last-week' "$test_dir/output"
 
 run_cli --query-between-dates invalid 2026-09-27
 grep -Fq -- '--query-between-dates <start-date> <end-date>' "$test_dir/output"
+
+if ! timeout 20s java -jar "$jar_path" --spring.main.web-application-type=none --server.port=9001 > "$test_dir/output" 2>&1; then
+    cat "$test_dir/output" >&2
+    echo "Packaged application failed to start with Spring arguments" >&2
+    exit 1
+fi
+grep -Fq 'Started HabitTrackerApplication' "$test_dir/output"
