@@ -1,5 +1,7 @@
 package com.raposo.habittracker.cli;
 
+import java.time.DateTimeException;
+
 import com.raposo.habittracker.application.GetHabitReportBetweenDatesUseCase;
 import com.raposo.habittracker.application.port.HabitEntryRepository;
 import com.raposo.habittracker.cli.formatter.HabitReportFormatter;
@@ -20,7 +22,12 @@ public class CommandParser {
                     yield new HelpCommand();
                 }
 
-                DateRange range = DateRange.between(args[1], args[2]);
+                DateRange range;
+                try {
+                    range = DateRange.between(args[1], args[2]);
+                } catch (DateTimeException | IllegalArgumentException exception) {
+                    yield new HelpCommand();
+                }
 
                 GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(entryRepository);
 
@@ -30,6 +37,10 @@ public class CommandParser {
             }
 
             case "--query-last-week" -> {
+                if (args.length != 1) {
+                    yield new HelpCommand();
+                }
+
                 GetHabitReportBetweenDatesUseCase getReport = new GetHabitReportBetweenDatesUseCase(entryRepository);
 
                 HabitReportFormatter formatter = new MarkdownHabitReportFormatter();

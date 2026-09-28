@@ -5,21 +5,19 @@ set -Eeuo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
-if ! command -v mvn >/dev/null 2>&1; then
-    echo "Error: Maven is required to run the CLI. Install Maven and try again." >&2
+if ! command -v java >/dev/null 2>&1; then
+    echo "Error: Java is required to run the CLI. Install Java and try again." >&2
     exit 1
 fi
 
-if [[ ! -f target/classes/com/raposo/habittracker/Main.class ]]; then
-    echo "Error: compiled CLI classes were not found. Run 'mvn test' in $PROJECT_DIR first." >&2
+JAR_PATH="$PROJECT_DIR/target/habit-tracker-0.4.0.jar"
+if [[ ! -f "$JAR_PATH" ]]; then
+    echo "Error: packaged application was not found. Run 'mvn verify' in $PROJECT_DIR first." >&2
     exit 1
 fi
 
-# exec:java accepts one argument string; quote arguments for its command-line parser.
-CLI_ARGUMENTS=""
-for argument in "$@"; do
-    quoted_argument=${argument//\'/\'\"\'\"\'}
-    CLI_ARGUMENTS+="'$quoted_argument' "
-done
+if [[ $# -eq 0 ]]; then
+    exec java -jar "$JAR_PATH" --help
+fi
 
-exec mvn -q exec:java -Dexec.mainClass=com.raposo.habittracker.Main "-Dexec.args=$CLI_ARGUMENTS"
+exec java -jar "$JAR_PATH" "$@"

@@ -50,6 +50,20 @@ class CommandParserTest {
     }
 
     @Test
+    void givenInvalidArgumentsWhenParseThenShowHelp() {
+        String[][] invalidArguments = {
+                { "--query-last-week", "extra" },
+                { "--query-between-dates", "2026-09-21" },
+                { "--query-between-dates", "not-a-date", "2026-09-27" },
+                { "--query-between-dates", "2026-09-27", "2026-09-21" }
+        };
+
+        for (String[] arguments : invalidArguments) {
+            assertInstanceOf(HelpCommand.class, CommandParser.parse(arguments, entries));
+        }
+    }
+
+    @Test
     void givenStoredZeroWhenQueryDateRangeThenPrintRecordedDataWithoutImportConfiguration() {
         LocalDate date = LocalDate.of(2026, 9, 2);
         entries.createEntry(date, habitId, new StoredEntry(0.0, "Tired"));

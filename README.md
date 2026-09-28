@@ -132,14 +132,14 @@ notes remain intact. Habits without a guide continue to work.
 
 ## CLI
 
-Build and verify the application once before using the CLI:
+Build and verify the packaged application once before using the CLI:
 
 ```bash
-mvn test
+mvn verify
 ```
 
-Repeat this step after changing Java code. The `habit` script runs the compiled
-CLI through Maven without rebuilding it for each query.
+Repeat this step after changing Java code. The `habit` script runs the packaged
+JAR. The same commands can be passed directly to `java -jar target/habit-tracker-0.4.0.jar`.
 
 Query last week:
 
@@ -163,8 +163,8 @@ resolved there. An absolute `DB_PATH` selects the same database from any locatio
 DB_PATH="/absolute/path/habits.db" ./habit --query-last-week
 ```
 
-Java and Maven must be available on `PATH`. The script reports missing Maven or
-compiled classes and returns the Maven process exit status.
+Java must be available on `PATH`. The script reports a missing JAR and returns
+the Java process exit status.
 
 ## HTTP API
 

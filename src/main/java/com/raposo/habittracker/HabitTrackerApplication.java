@@ -7,6 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class HabitTrackerApplication {
 
     public static void main(String[] args) {
+        if (args.length > 0) {
+            Main.main(args);
+            return;
+        }
+
         SpringApplication.run(HabitTrackerApplication.class, args);
     }
 }
