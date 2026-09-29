@@ -13,7 +13,7 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
     public String format(HabitReport report) {
         StringBuilder output = new StringBuilder();
 
-        output.append("Context:\n");
+        output.append("## Context\n\n");
         output.append("- Score scale: ")
                 .append(report.context().scoreScale())
                 .append("\n");
@@ -39,14 +39,14 @@ public class MarkdownHabitReportFormatter implements HabitReportFormatter {
         output.append("- Missing days after tracking started contribute 0 to period_score\n");
         output.append("- trend is N/A when previous range has no evaluable baseline\n\n");
 
-        output.append("Entries:\n");
+        output.append("## Entries\n\n");
         output.append(formatEntriesTable(report));
 
-        output.append("\nSummary:\n");
+        output.append("\n## Summary\n\n");
         output.append(formatSummaryTable(report));
 
         if (!report.scoringGuides().isEmpty()) {
-            output.append("\nScoring guides:\n");
+            output.append("\n## Scoring guides\n");
             for (var guide : report.scoringGuides()) {
                 output.append("\n").append(guide.habitName()).append("\n")
                         .append(guide.scoringGuide()).append("\n");

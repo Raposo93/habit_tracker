@@ -23,12 +23,12 @@ run_cli() {
 
 run_cli --query-between-dates 2026-09-21 2026-09-27
 grep -Fq -- '- Current range: 2026-09-21 to 2026-09-27' "$test_dir/output"
-grep -Fq 'Summary:' "$test_dir/output"
+grep -Fq '## Summary' "$test_dir/output"
 test -f "$DB_PATH"
 
 run_cli --query-last-week
 grep -Fq -- '- Current range:' "$test_dir/output"
-grep -Fq 'Summary:' "$test_dir/output"
+grep -Fq '## Summary' "$test_dir/output"
 
 run_cli --query-between-dates 2026-09-21
 grep -Fq -- '--query-between-dates <start-date> <end-date>' "$test_dir/output"

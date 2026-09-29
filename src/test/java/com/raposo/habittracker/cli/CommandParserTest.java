@@ -75,8 +75,9 @@ class CommandParserTest {
         assertTrue(output.contains("Tired"));
         assertTrue(output.contains(date.toString()));
         assertTrue(output.contains("0.00"));
+        assertReportSections(output);
         assertTrue(output.contains("| Sleep | N/A | 0.00 | N/A | ∅ no baseline | 0 | 0 | 1 | 0 |"));
-        assertFalse(output.contains("Scoring guides:"));
+        assertFalse(output.contains("## Scoring guides"));
         assertTrue(entries.findEntry(date, habitId).isPresent());
     }
 
@@ -91,6 +92,7 @@ class CommandParserTest {
         assertTrue(output.contains("Sleep"));
         assertTrue(output.contains("Rested"));
         assertTrue(output.contains("2.50"));
+        assertReportSections(output);
     }
 
     @Test
@@ -100,8 +102,14 @@ class CommandParserTest {
         String output = execute(CommandParser.parse(
                 new String[] { "--query-between-dates", "2026-09-02", "2026-09-02" }, entries));
         assertTrue(output.contains("1.50"));
-        assertTrue(output.contains("Scoring guides:\n\nSleep\n0: tired\n3: rested\n"));
-        assertTrue(output.indexOf("Scoring guides:") > output.indexOf("Summary:"));
+        assertTrue(output.contains("## Scoring guides\n\nSleep\n0: tired\n3: rested\n"));
+        assertTrue(output.indexOf("## Scoring guides") > output.indexOf("## Summary"));
+    }
+
+    private void assertReportSections(String output) {
+        assertTrue(output.startsWith("## Context\n\n- Score scale: "));
+        assertTrue(output.contains("\n\n## Entries\n\n| date | weekday | week_start | habit | score | note |\n"));
+        assertTrue(output.contains("\n\n## Summary\n\n| habit | previous_score | current_score | delta | trend |"));
     }
 
     private String execute(Command command) {
